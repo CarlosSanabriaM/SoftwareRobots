@@ -34,23 +34,7 @@ void loop() {
     Serial.println("Valor aleatorio: " + String(randomNumber));
 
     // En función del número generado, encendemos/apagamos los leds correspondientes
-    switch (randomNumber) {
-      case 1:
-        digitalWrite(led1, HIGH);
-        digitalWrite(led2, LOW);
-        digitalWrite(led3, LOW);
-        break;
-      case 2:
-        digitalWrite(led1, HIGH);
-        digitalWrite(led2, HIGH);
-        digitalWrite(led3, LOW);
-        break;
-      case 3:
-        digitalWrite(led1, HIGH);
-        digitalWrite(led2, HIGH);
-        digitalWrite(led3, HIGH);
-        break;
-    }
+    switchOnLeds(randomNumber);
   }
 
   // Si han quitado el dedo del botón
@@ -60,4 +44,24 @@ void loop() {
     pushed = 0;
   }
 
+}
+
+void switchOnLeds(int randomNumber) {
+  switch (randomNumber) {
+    case 1:
+      digitalWrite(led1, HIGH);
+      digitalWrite(led2, LOW);
+      digitalWrite(led3, LOW);
+      break;
+    case 2:
+      digitalWrite(led1, HIGH);
+      digitalWrite(led2, HIGH);
+      digitalWrite(led3, LOW);
+      break;
+    case 3:
+      digitalWrite(led1, HIGH);
+      digitalWrite(led2, HIGH);
+      digitalWrite(led3, HIGH);
+      break;
+  }
 }
