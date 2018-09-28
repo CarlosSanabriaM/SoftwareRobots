@@ -4,6 +4,10 @@ const int greenButton = 5;
 const int redLed = 3;
 const int greenLed = 4;
 
+// Almacena si el botón está pulsado (1) o despulsado (0)
+int redButtonPushed = 0;
+int greenButtonPushed = 0;
+
 // Indica el tamaño máximo de la secuencia
 const int MAX_COLOR_SEQUENCE_SIZE = 10;
 // Indica el tamaño inicial de la secuencia
@@ -22,7 +26,7 @@ boolean haveToShowColorSequence = true;
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("\nSetup");
+  Serial.println("\n---------\n  Setup\n---------");
 
   // Entradas de los botones
   pinMode(redButton, INPUT);
@@ -49,12 +53,12 @@ void loop() {
   }
 
   // Comprobamos la pulsación de los botones
-  if (checkIfButtonIsPushed(redButton)) {
+  if (checkIfRedButtonIsPushed()) {
     // Si se pulsa el botón rojo, es que el jugador quiere indicar que en la secuencia se debe encender el led rojo
     checkUserTry(redLed); // comprobamos esa suposición del usuario
   }
   // Si se ha pulsado el botón rojo, no se comprueba si se está pulsando el verde en ese mismo instante
-  else if (checkIfButtonIsPushed(greenButton)) {
+  else if (checkIfGreenButtonIsPushed()) {
     // Si se pulsa el botón verde, es que el jugador quiere indicar que en la secuencia se debe encender el led verde
     checkUserTry(greenLed); // comprobamos esa suposición del usuario
   }
@@ -67,8 +71,8 @@ void checkUserTry(int userLedColor) { // TODO - darle otro nombre mejor a este m
 
   // Si acierta
   if (userLedColor == expectedLedColor) {
-    Serial.println("El jugador ha acertado el color");
-    
+    Serial.println("\n-El jugador ha acertado el color\n");
+
     // Se incrementa el número de colores acertados
     numSuccessfulColors++;
 
@@ -77,10 +81,10 @@ void checkUserTry(int userLedColor) { // TODO - darle otro nombre mejor a este m
   }
   // Si falla
   else {
-    Serial.println("El jugador ha fallado el color");
-    
+    Serial.println("\n-El jugador ha fallado el color\n");
+
     // El juego se debe resetear (se establece el nº aciertos a 0, se genera una nueva secuencia, y se muestra)
-    numSuccessfulColors = 0; 
+    numSuccessfulColors = 0;
     haveToGenerateColorSequence = true;
     haveToShowColorSequence = true;
   }
@@ -89,8 +93,8 @@ void checkUserTry(int userLedColor) { // TODO - darle otro nombre mejor a este m
 void checkIfPlayerHasCompletedColorSequence() {
   // Si el jugador ha acertado todos los colores de la secuencia actual
   if (numSuccessfulColors == colorSequenceSize) {
-    Serial.println("El jugador ha acertado todos los colores de la secuencia actual");
-    
+    Serial.println("--El jugador ha acertado todos los colores de la secuencia actual\n");
+
     // Se incrementa la secuencia (en caso de ser posible)
     incrementColorSequence();
     // Se establece el numero de aciertos a 0
@@ -100,32 +104,74 @@ void checkIfPlayerHasCompletedColorSequence() {
   }
 }
 
-boolean checkIfButtonIsPushed(int buttonColor) {
-  // Comprobamos si el botón está pulsado o despulsado
-  int buttonActualState = digitalRead(buttonColor);
+/* Enciende el led sólo cuando se suelte el botón */
+boolean checkIfRedButtonIsPushed() {
+  // Comprobamos si el botón está pulsado o despulsado actualmente
+  int redButtonActualState = digitalRead(redButton);
 
-  // Si está pulsado
-  if (buttonActualState == HIGH) {
-    Serial.println("Botón pulsado"); // TODO - quitar
-    
-    // Encendemos el led correspondiente al botón pulsado durante 1 seg
-    int ledColor = buttonColor == redButton ? redLed : greenLed;
-    switchOnLedForOneSecond(ledColor);
+  // Si han pulsado el botón rojo y estaba sin pulsar
+  if (redButtonActualState == HIGH && redButtonPushed == 0) {
+    Serial.println("Boton rojo pulsado");
+    // Marcamos el botón como pulsado
+    redButtonPushed = 1;
+  }
+
+  // Si han quitado el dedo del botón rojo
+  else if (redButtonActualState == LOW && redButtonPushed == 1) {
+    // Lo marcamos como despulsado
+    Serial.println("Boton rojo despulsado");
+    redButtonPushed = 0;
+
+    // Encendemos el led rojo durante 1 seg
+    switchOnLedForOneSecond(redLed);
 
     Serial.println("Led termina de encenderse despues de pulsar boton"); // TODO - quitar
-    
-    // Devolvemos cierto, porque el botón está pulsado
+
+    // Devolvemos cierto, porque el jugador ha introducido un color
     return true;
   }
-  // Devolvemos falso, porque el botón no está pulsado
+
+  // Devolvemos falso, porque el jugador NO ha introducido un color
+  return false;
+}
+
+/* Enciende el led sólo cuando se suelte el botón */
+boolean checkIfGreenButtonIsPushed() {
+  // Comprobamos si el botón está pulsado o despulsado actualmente
+  int greenButtonActualState = digitalRead(greenButton);
+
+  // Si han pulsado el botón rojo y estaba sin pulsar
+  if (greenButtonActualState == HIGH && greenButtonPushed == 0) {
+    Serial.println("Boton verde pulsado");
+    // Marcamos el botón como pulsado
+    greenButtonPushed = 1;
+  }
+
+  // Si han quitado el dedo del botón rojo
+  else if (greenButtonActualState == LOW && greenButtonPushed == 1) {
+    // Lo marcamos como despulsado
+    Serial.println("Boton verde despulsado");
+    greenButtonPushed = 0;
+
+    // Encendemos el led rojo durante 1 seg
+    switchOnLedForOneSecond(greenLed);
+
+    Serial.println("Led termina de encenderse despues de pulsar boton"); // TODO - quitar
+
+    // Devolvemos cierto, porque el jugador ha introducido un color
+    return true;
+  }
+
+  // Devolvemos falso, porque el jugador NO ha introducido un color
   return false;
 }
 
 void showColorSequence() {
-  Serial.println("Se muestra la secuencia de colores");
-  
+  Serial.println("\n>Se muestra la secuencia de colores\n");
+
   for (int i = 0; i < colorSequenceSize; i++) {
     switchOnLedForOneSecond(colorSequence[i]);
+    delay(1000); // se espera un segundo entre cada parpadeo
   }
 }
 
@@ -133,25 +179,25 @@ void switchOnLedForOneSecond(int ledColor) {
   digitalWrite(ledColor, HIGH);
   delay(1000);
   digitalWrite(ledColor, LOW);
-  delay(500); // por si hay que encender dos veces el mismo led, para que se note el cambio
 }
 
 int randomColor() {
   // Generamos numero aleatorio que solo pueda tomar dos valores: 0 ó 1
   long randomColor = random(2);
   // El 0 representa el rojo y el 1 el verde
-  Serial.println(String("Color aleatorio: ") + String(randomColor == 0L ? "rojo" : "verde"));
+  Serial.println(String("Color generado aleatoriamente: ") + String(randomColor == 0L ? "rojo" : "verde"));
   // Si el número aleatorio generado es 0, retornamos el pin donde se encuentra el led rojo
   // y si no (si es 1), retornamos el pin donde se encuentra el led verde
   return randomColor == 0L ? redLed : greenLed;
 }
 
 void generateRandomColorSequence() {
-  Serial.println("Se genera una secuencia aleatoria de tamanio inicial: " + String(INITIAL_COLOR_SEQUENCE_SIZE));
-  
+  Serial.println("@Se genera una secuencia aleatoria de tamanio inicial: "
+                 + String(INITIAL_COLOR_SEQUENCE_SIZE) + String("\n"));
+
   // Se establece el tamaño de la secuencia con el valor que debe tener al inicio de un nuevo juego
   colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
-  
+
   // Generamos la secuencia inicial de forma aleatorio
   for (int i = 0; i < colorSequenceSize; i++) {
     colorSequence[i] = randomColor();
@@ -165,14 +211,14 @@ void incrementColorSequence() {
     colorSequence[colorSequenceSize] = randomColor();
     colorSequenceSize++;
 
-    Serial.println("Se añade un nuevo color a la secuencia");
+    Serial.println("\n#Se aniade un nuevo color a la secuencia");
   }
   // Si se ha alcanzado, se genera una nueva secuencia aleatoria con el tamaño inicial
-  else {  
+  else {
     colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
     haveToGenerateColorSequence = true;
 
-    Serial.println("Se ha llegado al máximo tamanio posible de la secuencia. "
-      "Se generará una nueva secuencia del tamanio inicial.");
+    Serial.println("\n#Se ha llegado al máximo tamanio posible de la secuencia. "
+                   "Se generará una nueva secuencia del tamanio inicial.");
   }
 }
