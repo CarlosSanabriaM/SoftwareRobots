@@ -5,12 +5,15 @@ const int redLed = 3;
 const int greenLed = 4;
 
 // Almacena si el botón está pulsado (1) o despulsado (0)
-int pushed = 0;
+int redButtonPushed = 0;
+int greenButtonPushed = 0;
 
+// Indica el tamaño máximo de la secuencia
+const int MAX_COLOR_SEQUENCE_SIZE = 10;
+// Indica el tamaño inicial de la secuencia
+const int INITIAL_COLOR_SEQUENCE_SIZE = 3;
 // Almacena una secuencia de hasta 10 colores
 int colorSequence[10];
-// Indica el tamaño inicial de la secuencia
-int INITIAL_COLOR_SEQUENCE_SIZE = 3;
 // Indica el nº colores almacenados actualmente en el array anterior
 int colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
 
@@ -26,15 +29,17 @@ void setup() {
   pinMode(redLed, OUTPUT);
   pinMode(greenLed, OUTPUT);
 
-  initializeColorSequence();
+  generateRandomColorSequence(); // TODO - Tal vez deba ir en el loop
 }
 
 void loop() {
-  drawSequence(); // TODO
+  //generateRandomColorSequence()
+  
+  showSequence(); // TODO
   checkSequence(); // TODO
 }
 
-void drawSequence() {
+void showSequence() {
   for (int i = 0; i < colorSequenceSize; i++) {
     switchOnLed(colorSequence[i]);
     delay(1000); // esperamos un seg entre cada encendido
@@ -69,9 +74,23 @@ int randomColor() {
   return randomColor;
 }
 
-void initializeColorSequence() {
+void generateRandomColorSequence() {
   // Generamos la secuencia inicial de forma aleatorio
   for (int i = 0; i < INITIAL_COLOR_SEQUENCE_SIZE; i++) {
     colorSequence[i] = randomColor();
+  }
+}
+
+void incrementColorSequence() {
+  // Si no se ha alcanzado el tamaño máximo de la sequencia:
+  if (colorSequenceSize < MAX_COLOR_SEQUENCE_SIZE) {
+    // Añadimos un nuevo color a la sequencia
+    colorSequence[colorSequenceSize] = randomColor();
+    colorSequenceSize++;
+  } 
+  // Si se ha alcanzado, se genera una nueva secuencia aleatoria con el tamaño inicial
+  else{
+    colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
+    generateRandomColorSequence(); // TODO - Tal vez esto no vaya aqui!
   }
 }
