@@ -4,7 +4,7 @@ const int greenButton = 5;
 const int redLed = 3;
 const int greenLed = 4;
 
-// Almacena si el botón está pulsado (1) o despulsado (0)
+// Almacena si el botón está pulsado (1) o despulsado (0) // TODO - tal vez sobren al usar la estrategia 1
 int redButtonPushed = 0;
 int greenButtonPushed = 0;
 
@@ -13,7 +13,7 @@ const int MAX_COLOR_SEQUENCE_SIZE = 10;
 // Indica el tamaño inicial de la secuencia
 const int INITIAL_COLOR_SEQUENCE_SIZE = 3;
 // Almacena una secuencia de hasta 10 colores
-int colorSequence[10];
+int colorSequence[10]; // Cada color está representado por el pin del led de dicho color
 // Indica el nº colores almacenados actualmente en el array anterior
 int colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
 
@@ -38,15 +38,21 @@ void setup() {
 }
 
 void loop() {
-
-  // Comprobamos si el botón está pulsado o despulsado
-  int redButtonActualState = digitalRead(redButton);
-  
-  if(read == HIGH){
-    
-  }
-  
   gameLogic();
+  checkIfButtonIsPressed(redButton);
+  checkIfButtonIsPressed(greenButton);
+}
+
+void checkIfButtonIsPressed(int buttonColor){
+  // Comprobamos si el botón está pulsado o despulsado
+  int buttonActualState = digitalRead(buttonColor);
+
+  // Si está pulsado
+  if(buttonActualState == HIGH){
+    // Encendemos el led correspondiente al botón pulsado
+    switchOnLed();
+    delay(1000);
+  }
 }
 
 void gameLogic(){
@@ -85,20 +91,24 @@ void gameLogic(){
 void showColorSequence() {
   for (int i = 0; i < colorSequenceSize; i++) {
     switchOnLed(colorSequence[i]);
-    delay(1000); // esperamos un seg entre cada encendido
+    delay(1000); // esperamos un seg entre cada encendido // TODO - tal vez meter esto en switchOnLed y llamarlo switchOnLedAndDelay1000()
     switchOffLed(colorSequence[i]);
   }
 }
 
 void switchOffLed(int ledColor) {
-  switchLed(ledColor, LOW);
+  digitalWrite(ledColor, LOW);
+  //switchLed(ledColor, LOW); TODO - quitar
 }
 
 void switchOnLed(int ledColor) {
-  switchLed(ledColor, HIGH);
+  digitalWrite(ledColor, HIGH);
+  //switchLed(ledColor, HIGH); TODO - quitar
 }
 
+/* TODO - quitar
 void switchLed(int ledColor, int value) {
+  digitalWrite(ledColor, value);
   switch (ledColor) {
     case 0: // rojo
       digitalWrite(redLed, value);
@@ -108,13 +118,16 @@ void switchLed(int ledColor, int value) {
       break;
   }
 }
+*/
 
-/* Devuelve un numero aleatorio: 0-rojo, 1-verde */
 int randomColor() {
-  // Generamos numero aleatorio entre 0 y 1
+  // Generamos numero aleatorio que solo pueda tomar dos valores: 0 ó 1
   int randomColor = random(2);
+  // El 0 representa el rojo y el 1 el verde
   Serial.println("Color aleatorio: " + randomColor == 0 ? "rojo" : "verde");
-  return randomColor;
+  // Si el número aleatorio generado es 0, retornamos el pin donde se encuentra el led rojo
+  // y si no (si es 1), retornamos el pin donde se encuentra el led verde
+  return randomColor == 0 ? redLed : greenLed;
 }
 
 void generateRandomColorSequence() {
