@@ -4,10 +4,6 @@ const int greenButton = 5;
 const int redLed = 3;
 const int greenLed = 4;
 
-// Almacena si el botón está pulsado (1) o despulsado (0) // TODO - tal vez sobren al usar la estrategia 1
-int redButtonPushed = 0;
-int greenButtonPushed = 0;
-
 // Indica el tamaño máximo de la secuencia
 const int MAX_COLOR_SEQUENCE_SIZE = 10;
 // Indica el tamaño inicial de la secuencia
@@ -59,8 +55,6 @@ void loop() {
     checkUserTry(greenLed); // comprobamos esa suposición del usuario
   }
 
-  checkIfPlayerHasCompletedColorSequence();
-
 }
 
 void checkUserTry(int userLedColor) { // TODO - darle otro nombre mejor a este método??
@@ -71,9 +65,13 @@ void checkUserTry(int userLedColor) { // TODO - darle otro nombre mejor a este m
   if (userLedColor == expectedLedColor) {
     // Se incrementa el número de colores acertados
     numSuccessfulColors++;
+
+    // Comprobamos si el jugador ha acertado toda la secuencia
+    checkIfPlayerHasCompletedColorSequence();
   }
+  // Si falla
   else {
-    // Si falla, el juego se debe resetear (se establece el nº aciertos a 0, se genera una nueva secuencia, y se muestra)
+    // El juego se debe resetear (se establece el nº aciertos a 0, se genera una nueva secuencia, y se muestra)
     numSuccessfulColors = 0; 
     haveToGenerateColorSequence = true;
     haveToShowColorSequence = true;
@@ -98,9 +96,9 @@ boolean checkIfButtonIsPushed(int buttonColor) {
 
   // Si está pulsado
   if (buttonActualState == HIGH) {
-    // Encendemos el led correspondiente al botón pulsado
+    // Encendemos el led correspondiente al botón pulsado durante 1 seg
     int ledColor = buttonColor == redButton ? redLed : greenLed;
-    switchOnLedAndDelay1000(ledColor);
+    switchOnLedForOneSecond(ledColor);
     // Devolvemos cierto, porque el botón está pulsado
     return true;
   }
@@ -110,17 +108,13 @@ boolean checkIfButtonIsPushed(int buttonColor) {
 
 void showColorSequence() {
   for (int i = 0; i < colorSequenceSize; i++) {
-    switchOnLedAndDelay1000(colorSequence[i]);
-    switchOffLed(colorSequence[i]);
+    switchOnLedForOneSecond(colorSequence[i]);
   }
 }
 
-void switchOnLedAndDelay1000(int ledColor) {
+void switchOnLedForOneSecond(int ledColor) {
   digitalWrite(ledColor, HIGH);
   delay(1000);
-}
-
-void switchOffLed(int ledColor) {
   digitalWrite(ledColor, LOW);
 }
 
@@ -154,7 +148,6 @@ void incrementColorSequence() {
   // Si se ha alcanzado, se genera una nueva secuencia aleatoria con el tamaño inicial
   else {
     colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
-    // generateRandomColorSequence(); TODO - esto y la linea siguiente son equivalentes, pero creo que queda mejor dejar lo siguiente
     haveToGenerateColorSequence = true;
   }
 }
