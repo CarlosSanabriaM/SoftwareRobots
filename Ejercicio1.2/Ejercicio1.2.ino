@@ -15,7 +15,7 @@ const int INITIAL_COLOR_SEQUENCE_SIZE = 3;
 // Almacena una secuencia de hasta 10 colores
 int colorSequence[10]; // Cada color está representado por el pin del led de dicho color
 // Indica el nº colores almacenados actualmente en el array anterior
-int colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
+int colorSequenceSize;
 
 // Indica el número de colores de la secuencia acertados por el jugador
 int numSuccessfulColors = 0;
@@ -38,21 +38,66 @@ void setup() {
 }
 
 void loop() {
-  // Ejecutamos la lógica del juego
-  gameLogic();
+  if (haveToGenerateColorSequence) {
+    generateRandomColorSequence();
+    haveToGenerateColorSequence = false;
+  }
+
+  if (haveToShowColorSequence) {
+    showColorSequence();
+    haveToShowColorSequence = false;
+  }
 
   // Comprobamos la pulsación de los botones
-  redButtonPushed  = checkIfButtonIsPushed(redButton);
-  if(!redButtonPushed)
-    checkIfButtonIsPushed(greenButton);
+  if (checkIfButtonIsPushed(redButton)) {
+    // Si se pulsa el botón rojo, es que el jugador quiere indicar que en la secuencia se debe encender el led rojo
+    checkUserTry(redLed); // comprobamos esa suposición del usuario
+  }
+  // Si se ha pulsado el botón rojo, no se comprueba si se está pulsando el verde en ese mismo instante
+  else if (checkIfButtonIsPushed(greenButton)) {
+    // Si se pulsa el botón verde, es que el jugador quiere indicar que en la secuencia se debe encender el led verde
+    checkUserTry(greenLed); // comprobamos esa suposición del usuario
+  }
+
+  checkIfPlayerHasCompletedColorSequence();
+
 }
 
-boolean checkIfButtonIsPushed(int buttonColor){
+void checkUserTry(int userLedColor) { // TODO - darle otro nombre mejor a este método??
+  // Comparamos el color introducido por el usuario con el color que debía haber introducido
+  int expectedLedColor = colorSequence[numSuccessfulColors];
+
+  // Si acierta
+  if (userLedColor == expectedLedColor) {
+    // Se incrementa el número de colores acertados
+    numSuccessfulColors++;
+  }
+  else {
+    // Si falla, el juego se debe resetear (se establece el nº aciertos a 0, se genera una nueva secuencia, y se muestra)
+    numSuccessfulColors = 0; 
+    haveToGenerateColorSequence = true;
+    haveToShowColorSequence = true;
+  }
+}
+
+void checkIfPlayerHasCompletedColorSequence() {
+  // Si el jugador ha acertado todos los colores de la secuencia actual
+  if (numSuccessfulColors == colorSequenceSize) {
+    // Se incrementa la secuencia (en caso de ser posible)
+    incrementColorSequence();
+    // Se establece el numero de aciertos a 0
+    numSuccessfulColors = 0;
+    // Se indica que hay que volver a mostrar la secuencia
+    haveToShowColorSequence = true;
+  }
+}
+
+boolean checkIfButtonIsPushed(int buttonColor) {
   // Comprobamos si el botón está pulsado o despulsado
   int buttonActualState = digitalRead(buttonColor);
 
   // Si está pulsado
-  if(buttonActualState == HIGH){
+  if (buttonActualState == HIGH) {
     // Encendemos el led correspondiente al botón pulsado
     int ledColor = buttonColor == redButton ? redLed : greenLed;
     switchOnLedAndDelay1000(ledColor);
@@ -61,39 +106,6 @@ boolean checkIfButtonIsPushed(int buttonColor){
   }
   // Devolvemos falso, porque el botón no está pulsado
   return false;
-}
-
-void gameLogic(){
-  if(haveToGenerateColorSequence){
-    generateRandomColorSequence();
-    haveToGenerateColorSequence = false;
-  }
-  
-  if(haveToShowColorSequence){
-    showColorSequence();
-    haveToShowColorSequence = false;
-  }
-
-  // TODO- igual merece la pena sacar esta parte a otra funcion --> checkPlayerHasCompletedColorSequence()
-  // Si el jugador ha acertado todos los colores de la secuencia actual
-  if(numSuccessfulColors == colorSequenceSize){
-    // Se incrementa la secuencia (en caso de ser posible)
-    incrementColorSequence();
-    // Se establece el numero de aciertos a 0
-    numSuccessfulColors = 0;
-    // Se indica que hay que volver a mostrar la secuencia
-    haveToShowColorSequence = true;
-  }
-
-  if(jugadorAcierta){
-    // Se incrementa el número de colores acertados
-    numSuccessfulColors++;
-  }
-
-  if(jugadorFalla){
-    haveToGenerateColorSequence = true;
-    haveToShowColorSequence = true;
-  }
 }
 
 void showColorSequence() {
@@ -123,8 +135,11 @@ int randomColor() {
 }
 
 void generateRandomColorSequence() {
+  // Se establece el tamaño de la secuencia con el valor que debe tener al inicio de un nuevo juego
+  colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
+  
   // Generamos la secuencia inicial de forma aleatorio
-  for (int i = 0; i < INITIAL_COLOR_SEQUENCE_SIZE; i++) {
+  for (int i = 0; i < colorSequenceSize; i++) {
     colorSequence[i] = randomColor();
   }
 }
@@ -135,9 +150,9 @@ void incrementColorSequence() {
     // Añadimos un nuevo color a la sequencia
     colorSequence[colorSequenceSize] = randomColor();
     colorSequenceSize++;
-  } 
+  }
   // Si se ha alcanzado, se genera una nueva secuencia aleatoria con el tamaño inicial
-  else{
+  else {
     colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
     // generateRandomColorSequence(); TODO - esto y la linea siguiente son equivalentes, pero creo que queda mejor dejar lo siguiente
     haveToGenerateColorSequence = true;
