@@ -18,11 +18,11 @@ int colorSequence[10];
 int colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
 
 // Indica el número de colores de la secuencia acertados por el jugador
-int numSuccessfulColor = 0;
+int numSuccessfulColors = 0;
 // Indica si se ha de generar de nuevo una secuencia aleatoria del tamaño inicial
-boolean haveToGenerateSequence = true;
+boolean haveToGenerateColorSequence = true;
 // Indica si se ha de mostrar la secuencia al jugador
-boolean haveToShowSequence = true;
+boolean haveToShowColorSequence = true;
 
 void setup() {
   Serial.begin(9600);
@@ -38,13 +38,29 @@ void setup() {
 }
 
 void loop() {
-  //generateRandomColorSequence()
+  if(haveToGenerateColorSequence){
+    generateRandomColorSequence();
+    haveToGenerateColorSequence = false;
+  }
   
-  showSequence(); // TODO
-  checkSequence(); // TODO
+  if(haveToShowColorSequence){
+    showColorSequence();
+    haveToShowColorSequence = false;
+  }
+
+  // Si el jugador ha acertado todos los colores de la secuencia actual
+  if(numSuccessfulColor == colorSequenceSize){
+    // Se incrementa la secuencia (en caso de ser posible)
+    incrementColorSequence();
+    // Se establece el numero de aciertos a 0
+    numSuccessfulColors = 0;
+    // Se indica que hay que volver a mostrar la secuencia
+    haveToShowColorSequence = true;
+  }
+  
 }
 
-void showSequence() {
+void showColorSequence() {
   for (int i = 0; i < colorSequenceSize; i++) {
     switchOnLed(colorSequence[i]);
     delay(1000); // esperamos un seg entre cada encendido
