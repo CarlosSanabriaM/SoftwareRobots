@@ -17,6 +17,13 @@ int colorSequence[10];
 // Indica el nº colores almacenados actualmente en el array anterior
 int colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
 
+// Indica el número de colores de la secuencia acertados por el jugador
+int numSuccessfulColor = 0;
+// Indica si se ha de generar de nuevo una secuencia aleatoria del tamaño inicial
+boolean haveToGenerateSequence = true;
+// Indica si se ha de mostrar la secuencia al jugador
+boolean haveToShowSequence = true;
+
 void setup() {
   Serial.begin(9600);
   Serial.println("Setup");
@@ -28,8 +35,6 @@ void setup() {
   // Salidas de los leds
   pinMode(redLed, OUTPUT);
   pinMode(greenLed, OUTPUT);
-
-  generateRandomColorSequence(); // TODO - Tal vez deba ir en el loop
 }
 
 void loop() {
@@ -91,6 +96,6 @@ void incrementColorSequence() {
   // Si se ha alcanzado, se genera una nueva secuencia aleatoria con el tamaño inicial
   else{
     colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
-    generateRandomColorSequence(); // TODO - Tal vez esto no vaya aqui!
+    generateRandomColorSequence();
   }
 }
