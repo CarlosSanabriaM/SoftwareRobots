@@ -1,3 +1,11 @@
+/*
+ * Circuito disponible en Tinkercad en el siguiente enlace: 
+ * https://www.tinkercad.com/things/l7NIXa0RenC
+ * 
+ * La sección "Código" está vacía. Hay que copiar el código de
+ * este fichero e introducirlo ahí para probar el funcionamiento.
+ */
+
 // Pins
 const int redButton = 2;
 const int greenButton = 5;
@@ -202,6 +210,7 @@ void generateRandomColorSequence() {
   for (int i = 0; i < colorSequenceSize; i++) {
     colorSequence[i] = randomColor();
   }
+  serialPrintColorSequence();
 }
 
 void incrementColorSequence() {
@@ -212,6 +221,7 @@ void incrementColorSequence() {
     colorSequenceSize++;
 
     Serial.println("\n#Se aniade un nuevo color a la secuencia");
+    serialPrintColorSequence();
   }
   // Si se ha alcanzado, se genera una nueva secuencia aleatoria con el tamaño inicial
   else {
@@ -221,4 +231,18 @@ void incrementColorSequence() {
     Serial.println("\n#Se ha llegado al máximo tamanio posible de la secuencia. "
                    "Se generará una nueva secuencia del tamanio inicial.");
   }
+}
+
+/* Muestra por la consola los valores actuales de la secuencia */
+void serialPrintColorSequence() {
+  String stringColorSequence = "\n$Secuencia de colores: [";
+
+  for (int i = 0; i < colorSequenceSize; i++) {
+    stringColorSequence += colorSequence[i] == redLed ? "rojo" : "verde";
+    if (i < colorSequenceSize - 1)
+      stringColorSequence += ", ";
+  }
+  stringColorSequence += "]";
+
+  Serial.println(stringColorSequence);
 }
