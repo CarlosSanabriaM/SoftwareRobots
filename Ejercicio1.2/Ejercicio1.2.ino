@@ -38,21 +38,29 @@ void setup() {
 }
 
 void loop() {
+  // Ejecutamos la lógica del juego
   gameLogic();
-  checkIfButtonIsPressed(redButton);
-  checkIfButtonIsPressed(greenButton);
+
+  // Comprobamos la pulsación de los botones
+  redButtonPushed  = checkIfButtonIsPushed(redButton);
+  if(!redButtonPushed)
+    checkIfButtonIsPushed(greenButton);
 }
 
-void checkIfButtonIsPressed(int buttonColor){
+boolean checkIfButtonIsPushed(int buttonColor){
   // Comprobamos si el botón está pulsado o despulsado
   int buttonActualState = digitalRead(buttonColor);
 
   // Si está pulsado
   if(buttonActualState == HIGH){
     // Encendemos el led correspondiente al botón pulsado
-    switchOnLed();
-    delay(1000);
+    int ledColor = buttonColor == redButton ? redLed : greenLed;
+    switchOnLedAndDelay1000(ledColor);
+    // Devolvemos cierto, porque el botón está pulsado
+    return true;
   }
+  // Devolvemos falso, porque el botón no está pulsado
+  return false;
 }
 
 void gameLogic(){
@@ -68,7 +76,7 @@ void gameLogic(){
 
   // TODO- igual merece la pena sacar esta parte a otra funcion --> checkPlayerHasCompletedColorSequence()
   // Si el jugador ha acertado todos los colores de la secuencia actual
-  if(numSuccessfulColor == colorSequenceSize){
+  if(numSuccessfulColors == colorSequenceSize){
     // Se incrementa la secuencia (en caso de ser posible)
     incrementColorSequence();
     // Se establece el numero de aciertos a 0
@@ -90,35 +98,19 @@ void gameLogic(){
 
 void showColorSequence() {
   for (int i = 0; i < colorSequenceSize; i++) {
-    switchOnLed(colorSequence[i]);
-    delay(1000); // esperamos un seg entre cada encendido // TODO - tal vez meter esto en switchOnLed y llamarlo switchOnLedAndDelay1000()
+    switchOnLedAndDelay1000(colorSequence[i]);
     switchOffLed(colorSequence[i]);
   }
 }
 
+void switchOnLedAndDelay1000(int ledColor) {
+  digitalWrite(ledColor, HIGH);
+  delay(1000);
+}
+
 void switchOffLed(int ledColor) {
   digitalWrite(ledColor, LOW);
-  //switchLed(ledColor, LOW); TODO - quitar
 }
-
-void switchOnLed(int ledColor) {
-  digitalWrite(ledColor, HIGH);
-  //switchLed(ledColor, HIGH); TODO - quitar
-}
-
-/* TODO - quitar
-void switchLed(int ledColor, int value) {
-  digitalWrite(ledColor, value);
-  switch (ledColor) {
-    case 0: // rojo
-      digitalWrite(redLed, value);
-      break;
-    case 1: // verde
-      digitalWrite(greenLed, value);
-      break;
-  }
-}
-*/
 
 int randomColor() {
   // Generamos numero aleatorio que solo pueda tomar dos valores: 0 ó 1
