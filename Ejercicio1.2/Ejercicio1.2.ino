@@ -48,6 +48,7 @@ void loop() {
     haveToShowColorSequence = false;
   }
 
+  // TODO- igual merece la pena sacar esta parte a otra funcion
   // Si el jugador ha acertado todos los colores de la secuencia actual
   if(numSuccessfulColor == colorSequenceSize){
     // Se incrementa la secuencia (en caso de ser posible)
@@ -55,6 +56,16 @@ void loop() {
     // Se establece el numero de aciertos a 0
     numSuccessfulColors = 0;
     // Se indica que hay que volver a mostrar la secuencia
+    haveToShowColorSequence = true;
+  }
+
+  if(jugadorAcierta){
+    // Se incrementa el número de colores acertados
+    numSuccessfulColors++;
+  }
+
+  if(jugadorFalla){
+    haveToGenerateColorSequence = true;
     haveToShowColorSequence = true;
   }
   
@@ -112,6 +123,7 @@ void incrementColorSequence() {
   // Si se ha alcanzado, se genera una nueva secuencia aleatoria con el tamaño inicial
   else{
     colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
-    generateRandomColorSequence();
+    // generateRandomColorSequence(); TODO - esto y la linea siguiente son equivalentes, pero creo que queda mejor dejar lo siguiente
+    haveToGenerateColorSequence = true;
   }
 }
