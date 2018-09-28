@@ -38,6 +38,18 @@ void setup() {
 }
 
 void loop() {
+
+  // Comprobamos si el botón está pulsado o despulsado
+  int redButtonActualState = digitalRead(redButton);
+  
+  if(read == HIGH){
+    
+  }
+  
+  gameLogic();
+}
+
+void gameLogic(){
   if(haveToGenerateColorSequence){
     generateRandomColorSequence();
     haveToGenerateColorSequence = false;
@@ -48,7 +60,7 @@ void loop() {
     haveToShowColorSequence = false;
   }
 
-  // TODO- igual merece la pena sacar esta parte a otra funcion
+  // TODO- igual merece la pena sacar esta parte a otra funcion --> checkPlayerHasCompletedColorSequence()
   // Si el jugador ha acertado todos los colores de la secuencia actual
   if(numSuccessfulColor == colorSequenceSize){
     // Se incrementa la secuencia (en caso de ser posible)
@@ -68,7 +80,6 @@ void loop() {
     haveToGenerateColorSequence = true;
     haveToShowColorSequence = true;
   }
-  
 }
 
 void showColorSequence() {

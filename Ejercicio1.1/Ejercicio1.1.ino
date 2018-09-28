@@ -22,10 +22,10 @@ void setup() {
 
 void loop() {
   // Comprobamos si el botón está pulsado o despulsado
-  int actualButtonState = digitalRead(button);
+  int buttonActualState = digitalRead(button);
 
   // Si han pulsado el botón y estaba sin pulsar
-  if (actualButtonState == HIGH && pushed == 0) {
+  if (buttonActualState == HIGH && pushed == 0) {
     // Lo marcamos como pulsado
     pushed = 1;
 
@@ -38,7 +38,7 @@ void loop() {
   }
 
   // Si han quitado el dedo del botón
-  else if (actualButtonState == LOW && pushed == 1) {
+  else if (buttonActualState == LOW && pushed == 1) {
     // Lo marcamos como despulsado
     Serial.println();
     pushed = 0;
