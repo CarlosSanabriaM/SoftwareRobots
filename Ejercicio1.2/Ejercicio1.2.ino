@@ -133,7 +133,7 @@ boolean checkIfRedButtonIsPushed() {
     // Encendemos el led rojo durante 1 seg
     switchOnLedForOneSecond(redLed);
 
-    Serial.println("Led termina de encenderse despues de pulsar boton"); // TODO - quitar
+    Serial.println("Led termina de encenderse despues de pulsar boton");
 
     // Devolvemos cierto, porque el jugador ha introducido un color
     return true;
@@ -164,7 +164,7 @@ boolean checkIfGreenButtonIsPushed() {
     // Encendemos el led rojo durante 1 seg
     switchOnLedForOneSecond(greenLed);
 
-    Serial.println("Led termina de encenderse despues de pulsar boton"); // TODO - quitar
+    Serial.println("Led termina de encenderse despues de pulsar boton");
 
     // Devolvemos cierto, porque el jugador ha introducido un color
     return true;
@@ -187,6 +187,7 @@ void switchOnLedForOneSecond(int ledColor) {
   digitalWrite(ledColor, HIGH);
   delay(1000);
   digitalWrite(ledColor, LOW);
+  // TODO - si al pulsar el jugador un boton se debe esperar también un segundo para que pulse otro, se debe poner el delay(1000) aqui y no en el metodo de arriba
 }
 
 int randomColor() {
@@ -228,8 +229,8 @@ void incrementColorSequence() {
     colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
     haveToGenerateColorSequence = true;
 
-    Serial.println("\n#Se ha llegado al máximo tamanio posible de la secuencia. "
-                   "Se generará una nueva secuencia del tamanio inicial.");
+    Serial.println("\n#Se ha llegado al maximo tamanio posible de la secuencia. "
+                   "Se va a generar una nueva secuencia del tamanio inicial\n");
   }
 }
 
