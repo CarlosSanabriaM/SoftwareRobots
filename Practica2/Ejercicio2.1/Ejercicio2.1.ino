@@ -1,7 +1,7 @@
 #include <Keypad.h>
 
 // Pines utilizados para los estados abierto y cerrado de la puerta
-const int ledDoorOpen = 6; // es un led rojo, que cuando está encendido indica puerta abierta/abriéndose
+const int ledDoorOpened = 6; // es un led rojo, que cuando está encendido indica puerta abierta/abriéndose
 const int ledDoorClosed = 7; // es un led verde, que cuando está encendido indica puerta cerrada/cerrándose
 
 // Teclado
@@ -23,13 +23,17 @@ Keypad _keypad = Keypad(makeKeymap(keys), rowsPins, columnsPins, numRows, numCol
 // Buffer de lectura en el que iremos almacenando todas las teclas que pulsa el usuario
 String readingBuffer = "";
 
+
 void setup() {
   Serial.begin(9600);
   Serial.println("\n---------\n  Setup\n---------");
 
   // Salidas de los leds
-  pinMode(ledDoorOpen, OUTPUT);
+  pinMode(ledDoorOpened, OUTPUT);
   pinMode(ledDoorClosed, OUTPUT);
+
+  // Inicialmente la puerta está cerrada
+  digitalWrite(ledDoorClosed, HIGH);
 }
 
 void loop() {
@@ -39,7 +43,28 @@ void loop() {
   // Si se pulsó alguna tecla
   if (key != '\0') {
     Serial.println("Tecla pulsada: " + String(key));
-    
-  }
 
+    // Si la tecla pulsada es la A
+    if (key != 'A') {
+      // Abrimos la puerta durante 5 segundos
+      openTheDoorFor5Seconds();
+    }
+  }
+}
+
+
+void openTheDoorFor5Seconds() {
+  openTheDoor();
+  delay(5000);
+  closeTheDoor();
+}
+
+void openTheDoor() {
+  digitalWrite(ledDoorClosed, LOW);
+  digitalWrite(ledDoorOpened, HIGH);
+}
+
+void closeTheDoor() {
+  digitalWrite(ledDoorClosed, HIGH);
+  digitalWrite(ledDoorOpened, LOW);
 }
