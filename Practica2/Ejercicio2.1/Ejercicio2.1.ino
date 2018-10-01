@@ -68,11 +68,13 @@ void openTheDoorFor5Seconds() {
 }
 
 void openTheDoor() {
+  Serial.println("Se abre la puerta");
   digitalWrite(ledDoorClosed, LOW);
   digitalWrite(ledDoorOpened, HIGH);
 }
 
 void closeTheDoor() {
+  Serial.println("Se cierra la puerta");
   digitalWrite(ledDoorClosed, HIGH);
   digitalWrite(ledDoorOpened, LOW);
 }
