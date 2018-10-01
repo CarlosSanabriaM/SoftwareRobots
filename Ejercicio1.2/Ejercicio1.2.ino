@@ -27,10 +27,6 @@ int colorSequenceSize;
 
 // Indica el número de colores de la secuencia acertados por el jugador
 int numSuccessfulColors = 0;
-// Indica si se ha de generar de nuevo una secuencia aleatoria del tamaño inicial
-boolean haveToGenerateColorSequence = true;
-// Indica si se ha de mostrar la secuencia al jugador
-boolean haveToShowColorSequence = true;
 
 void setup() {
   Serial.begin(9600);
@@ -47,18 +43,12 @@ void setup() {
   // Leemos un pin analógico vacío para que el ruido analógico cause que la función
   // randomSeed() genere diferentes semillas cada vez que se inicia el sketch, para la función random()
   randomSeed(analogRead(0));
+
+  generateRandomColorSequence();
+  showColorSequence();
 }
 
 void loop() {
-  if (haveToGenerateColorSequence) {
-    generateRandomColorSequence();
-    haveToGenerateColorSequence = false;
-  }
-
-  if (haveToShowColorSequence) {
-    showColorSequence();
-    haveToShowColorSequence = false;
-  }
 
   // Comprobamos la pulsación de los botones
   if (checkIfRedButtonIsPushed()) {
@@ -73,7 +63,7 @@ void loop() {
 
 }
 
-void checkUserTry(int userLedColor) { // TODO - darle otro nombre mejor a este método??
+void checkUserTry(int userLedColor) {
   // Comparamos el color introducido por el usuario con el color que debía haber introducido
   int expectedLedColor = colorSequence[numSuccessfulColors];
 
@@ -93,8 +83,8 @@ void checkUserTry(int userLedColor) { // TODO - darle otro nombre mejor a este m
 
     // El juego se debe resetear (se establece el nº aciertos a 0, se genera una nueva secuencia, y se muestra)
     numSuccessfulColors = 0;
-    haveToGenerateColorSequence = true;
-    haveToShowColorSequence = true;
+    generateRandomColorSequence();
+    showColorSequence();
   }
 }
 
@@ -107,8 +97,8 @@ void checkIfPlayerHasCompletedColorSequence() {
     incrementColorSequence();
     // Se establece el numero de aciertos a 0
     numSuccessfulColors = 0;
-    // Se indica que hay que volver a mostrar la secuencia
-    haveToShowColorSequence = true;
+    // Se vuelve a mostrar la secuencia
+    showColorSequence();
   }
 }
 
@@ -187,7 +177,6 @@ void switchOnLedForOneSecond(int ledColor) {
   digitalWrite(ledColor, HIGH);
   delay(1000);
   digitalWrite(ledColor, LOW);
-  // TODO - si al pulsar el jugador un boton se debe esperar también un segundo para que pulse otro, se debe poner el delay(1000) aqui y no en el metodo de arriba
 }
 
 int randomColor() {
@@ -227,7 +216,7 @@ void incrementColorSequence() {
   // Si se ha alcanzado, se genera una nueva secuencia aleatoria con el tamaño inicial
   else {
     colorSequenceSize = INITIAL_COLOR_SEQUENCE_SIZE;
-    haveToGenerateColorSequence = true;
+    generateRandomColorSequence();
 
     Serial.println("\n#Se ha llegado al maximo tamanio posible de la secuencia. "
                    "Se va a generar una nueva secuencia del tamanio inicial\n");
