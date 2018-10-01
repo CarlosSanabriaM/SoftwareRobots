@@ -1,16 +1,23 @@
 /*
- * Circuito disponible en Tinkercad en el siguiente enlace: 
- * https://www.tinkercad.com/things/7p5eHTP9m4u
- * 
- * La sección "Código" está vacía. Hay que copiar el código de
- * este fichero e introducirlo ahí para probar el funcionamiento.
- */
+   Circuito disponible en Tinkercad en el siguiente enlace:
+   https://www.tinkercad.com/things/7p5eHTP9m4u
+
+   La sección "Código" está vacía. Hay que copiar el código de
+   este fichero e introducirlo ahí para probar el funcionamiento.
+*/
 
 // Pins
 const int redButton = 2;
 const int greenButton = 5;
-const int redLed = 3;
-const int greenLed = 4;
+const int redLed = 6;
+const int greenLed = 7;
+const int blueLed = 8;
+const int pinBuzzer = 11;
+
+// Sonido para cada color
+const int redSound = 698;
+const int greenSound = 523;
+const int failSound = -10;
 
 // Almacena si el botón está pulsado (1) o despulsado (0)
 int redButtonPushed = 0;
@@ -121,7 +128,7 @@ boolean checkIfRedButtonIsPushed() {
     redButtonPushed = 0;
 
     // Encendemos el led rojo durante 1 seg
-    switchOnLedForOneSecond(redLed);
+    switchOnLedForOneSecondAndPlaySound(redLed);
 
     Serial.println("Led termina de encenderse despues de pulsar boton");
 
@@ -152,7 +159,7 @@ boolean checkIfGreenButtonIsPushed() {
     greenButtonPushed = 0;
 
     // Encendemos el led rojo durante 1 seg
-    switchOnLedForOneSecond(greenLed);
+    switchOnLedForOneSecondAndPlaySound(greenLed);
 
     Serial.println("Led termina de encenderse despues de pulsar boton");
 
@@ -168,15 +175,38 @@ void showColorSequence() {
   Serial.println("\n>Se muestra la secuencia de colores\n");
 
   for (int i = 0; i < colorSequenceSize; i++) {
-    switchOnLedForOneSecond(colorSequence[i]);
+    switchOnLedForOneSecondAndPlaySound(colorSequence[i]);
     delay(1000); // se espera un segundo entre cada parpadeo
   }
 }
 
-void switchOnLedForOneSecond(int ledColor) {
+void switchOnLedForOneSecondAndPlaySound(int ledColor) {
+  playSound(ledColor);
+
   digitalWrite(ledColor, HIGH);
-  delay(1000);
+  delay(500);
+  stopSound();  
+  delay(500);
   digitalWrite(ledColor, LOW);
+}
+
+void playSound(int ledColor){
+  // En función del color del led, reproducimos un sonido u otro
+  switch (ledColor) {
+    case redLed:
+      tone(pinBuzzer, redSound);
+      break;
+    case greenLed:
+      tone(pinBuzzer, greenSound);
+      break;
+    case blueLed:
+      tone(pinBuzzer, failSound);
+      break;
+  }
+}
+
+void stopSound(){
+  noTone(pinBuzzer);
 }
 
 int randomColor() {
