@@ -56,15 +56,16 @@ void loop() {
   checkKeystrokes();
 }
 
-void checkIfTimeHasPassed(){
+void checkIfTimeHasPassed() {
   // Si la puerta está abierta y han pasado 5 segundos desde que se abrió
   if (doorIsOpened && millis() - timeDoorWasOpened >= 5000) {
+    Serial.println("\n> Se acaban los 5 segundos de apertura");
     // Se cierra la puerta
     closeTheDoor();
   }
 }
 
-void checkKeystrokes(){
+void checkKeystrokes() {
   // Obtenemos la tecla pulsada (devuelve '\0' si no se pulsó ninguna)
   char key = _keypad.getKey();
 
@@ -72,13 +73,14 @@ void checkKeystrokes(){
   if (key != '\0') {
     Serial.println("Tecla pulsada: " + String(key));
 
-    // Si la tecla pulsada es la A
-    if (key == 'A') {
+    // Si la tecla pulsada es la A y la puerta está cerrada
+    if (key == 'A' && !doorIsOpened) {
       // Abrimos la puerta durante 5 segundos
       openTheDoorFor5Seconds();
     }
     // Si la tecla pulsada es la C y la puerta está abierta
-    else if(key == 'C' && doorIsOpened) {
+    else if (key == 'C' && doorIsOpened) {
+      Serial.println("\n> Se fuerza al cierre de la puerta");
       // Se cierra la puerta
       closeTheDoor();
     }
@@ -86,7 +88,7 @@ void checkKeystrokes(){
 }
 
 void openTheDoorFor5Seconds() {
-  Serial.println("Se abre la puerta");
+  Serial.println("\n# Se abre la puerta");
 
   // Se encienden/apagan los leds correspondientes
   digitalWrite(ledDoorClosed, LOW);
@@ -98,7 +100,7 @@ void openTheDoorFor5Seconds() {
 }
 
 void closeTheDoor() {
-  Serial.println("Se cierra la puerta");
+  Serial.println("# Se cierra la puerta\n");
 
   // Se encienden/apagan los leds correspondientes
   digitalWrite(ledDoorClosed, HIGH);
