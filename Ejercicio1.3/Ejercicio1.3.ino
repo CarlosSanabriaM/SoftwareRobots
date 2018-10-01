@@ -1,11 +1,3 @@
-/*
-   Circuito disponible en Tinkercad en el siguiente enlace:
-   https://www.tinkercad.com/things/7p5eHTP9m4u
-
-   La sección "Código" está vacía. Hay que copiar el código de
-   este fichero e introducirlo ahí para probar el funcionamiento.
-*/
-
 // Pins
 const int redButton = 2;
 const int greenButton = 5;
