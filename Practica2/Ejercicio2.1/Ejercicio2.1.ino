@@ -1,3 +1,11 @@
+/*
+ * Circuito disponible en Tinkercad en el siguiente enlace: 
+ * https://www.tinkercad.com/things/hlJc0ERJcDu
+ * 
+ * La sección "Código" está vacía. Hay que copiar el código de
+ * este fichero e introducirlo ahí para probar el funcionamiento.
+ */
+
 #include <Keypad.h>
 
 // Pines utilizados para los estados abierto y cerrado de la puerta
@@ -45,7 +53,7 @@ void loop() {
     Serial.println("Tecla pulsada: " + String(key));
 
     // Si la tecla pulsada es la A
-    if (key != 'A') {
+    if (key == 'A') {
       // Abrimos la puerta durante 5 segundos
       openTheDoorFor5Seconds();
     }
