@@ -17,7 +17,7 @@ const int pinBuzzer = 11;
 // Sonido para cada color
 const int redSound = 698;
 const int greenSound = 523;
-const int failSound = -10;
+const int failSound = 200;
 
 // Almacena si el botón está pulsado (1) o despulsado (0)
 int redButtonPushed = 0;
@@ -46,6 +46,7 @@ void setup() {
   // Salidas de los leds
   pinMode(redLed, OUTPUT);
   pinMode(greenLed, OUTPUT);
+  pinMode(blueLed, OUTPUT);
 
   // Leemos un pin analógico vacío para que el ruido analógico cause que la función
   // randomSeed() genere diferentes semillas cada vez que se inicia el sketch, para la función random()
@@ -87,6 +88,9 @@ void checkUserTry(int userLedColor) {
   // Si falla
   else {
     Serial.println("\n-El jugador ha fallado el color\n");
+
+    // Encedemos el led azul para indicar que el jugador ha fallado
+    switchOnLedForOneSecondAndPlaySound(blueLed);
 
     // El juego se debe resetear (se establece el nº aciertos a 0, se genera una nueva secuencia, y se muestra)
     numSuccessfulColors = 0;
