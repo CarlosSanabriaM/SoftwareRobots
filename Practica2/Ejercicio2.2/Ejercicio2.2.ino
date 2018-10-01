@@ -49,12 +49,22 @@ void setup() {
 }
 
 void loop() {
+  // Comprobamos si la puerta está abierta y han pasado los 5 segundos
+  checkIfTimeHasPassed();
+
+  // Comprobamos si se pulsa el teclado
+  checkKeystrokes();
+}
+
+void checkIfTimeHasPassed(){
   // Si la puerta está abierta y han pasado 5 segundos desde que se abrió
   if (doorIsOpened && millis() - timeDoorWasOpened >= 5000) {
     // Se cierra la puerta
     closeTheDoor();
   }
+}
 
+void checkKeystrokes(){
   // Obtenemos la tecla pulsada (devuelve '\0' si no se pulsó ninguna)
   char key = _keypad.getKey();
 
@@ -73,7 +83,6 @@ void loop() {
       closeTheDoor();
     }
   }
-  
 }
 
 void openTheDoorFor5Seconds() {
