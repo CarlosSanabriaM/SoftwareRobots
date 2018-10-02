@@ -97,27 +97,40 @@ void userHasPressedAKeyWhileDoorWasClosed(char key) {
   readingBuffer = readingBuffer + key;
   Serial.println("Contenido buffer lectura: " + readingBuffer);
 
-  // Si se han introducido 4 teclas y coinciden con la contraseña
-  if (readingBuffer.length() == 4 && readingBuffer == password) {
+  // Si se han introducido 4 teclas
+  if (readingBuffer.length() == 4) {
+    userHasIntroducedAPassword();
+  }
+}
+
+void userHasIntroducedAPassword(){
+  // Si la contraseña introducida coincide con la correcta
+  if (readingBuffer == password) {
     userHasIntroducedCorrectPassword();
   }
-  // Si se han introducido 4 teclas, pero NO coinciden con la contraseña
-  else if (readingBuffer.length() == 4 && readingBuffer != password) {
+  // Si la contraseña introducida NO coincide con la correcta
+  else {
     userHasIntroducedWrongPassword();
   }
 }
 
 void userHasIntroducedCorrectPassword() {
-  /*apagar led verde un segundo*/
+  // Se resetea el buffer
   readingBuffer = "";
+  
+  // Se apaga el led verde un segundo
+  switchOffGreenLedFor1Second();
 
   // Abrimos la puerta durante 5 segundos
   openTheDoorFor5Seconds();
 }
 
 void userHasIntroducedWrongPassword() {
-  /*blinkDoor3Times()*/
+  // Se resetea el buffer
   readingBuffer = "";
+  
+  // El led verde parpadea 3 veces y se queda encendido
+  blinkGreenLed3Times();
 }
 
 void openTheDoorFor5Seconds() {
@@ -141,4 +154,23 @@ void closeTheDoor() {
 
   // Se indica que la puerta está cerrada
   doorIsOpened = false;
+}
+
+void switchOffGreenLedFor1Second(){
+  digitalWrite(ledDoorClosed, LOW);
+  delay(1000); // Durante este tiempo no se procesan las teclas pulsadas, porque no se ejecuta el método loop
+}
+
+void blinkGreenLed3Times(){
+  // Durante este tiempo no se procesan las teclas pulsadas, porque no se ejecuta el método loop
+  blinkGreenLed();
+  delay(1000);
+  blinkGreenLed();
+  delay(1000);
+  blinkGreenLed();
+}
+
+void blinkGreenLed(){
+  switchOffGreenLedFor1Second();
+  digitalWrite(ledDoorClosed, HIGH);
 }
