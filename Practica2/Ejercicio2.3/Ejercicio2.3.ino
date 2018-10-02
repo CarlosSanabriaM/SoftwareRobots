@@ -104,6 +104,8 @@ void userHasPressedAKeyWhileDoorWasClosed(char key) {
 }
 
 void userHasIntroducedAPassword(){
+  Serial.println("\n@ Contrasenia introducida: " + readingBuffer);
+  
   // Si la contraseña introducida coincide con la correcta
   if (readingBuffer == password) {
     userHasIntroducedCorrectPassword();
@@ -115,6 +117,8 @@ void userHasIntroducedAPassword(){
 }
 
 void userHasIntroducedCorrectPassword() {
+  Serial.println("\n$ Contrasenia correcta");
+  
   // Se resetea el buffer
   readingBuffer = "";
   
@@ -126,6 +130,8 @@ void userHasIntroducedCorrectPassword() {
 }
 
 void userHasIntroducedWrongPassword() {
+  Serial.println("\n$ Contrasenia incorrecta\n");
+  
   // Se resetea el buffer
   readingBuffer = "";
   
@@ -156,11 +162,6 @@ void closeTheDoor() {
   doorIsOpened = false;
 }
 
-void switchOffGreenLedFor1Second(){
-  digitalWrite(ledDoorClosed, LOW);
-  delay(1000); // Durante este tiempo no se procesan las teclas pulsadas, porque no se ejecuta el método loop
-}
-
 void blinkGreenLed3Times(){
   // Durante este tiempo no se procesan las teclas pulsadas, porque no se ejecuta el método loop
   blinkGreenLed();
@@ -173,4 +174,10 @@ void blinkGreenLed3Times(){
 void blinkGreenLed(){
   switchOffGreenLedFor1Second();
   digitalWrite(ledDoorClosed, HIGH);
+}
+
+void switchOffGreenLedFor1Second(){
+  // Durante este tiempo no se procesan las teclas pulsadas, porque no se ejecuta el método loop
+  digitalWrite(ledDoorClosed, LOW);
+  delay(1000);
 }
