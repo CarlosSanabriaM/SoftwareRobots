@@ -73,31 +73,37 @@ void checkKeystrokes() {
 
   // Si se pulsó alguna tecla
   if (key != '\0') {
-    Serial.println("Tecla pulsada: " + String(key));
+    userHasPressedAKey(key);
+  }
+}
 
-    // Si la puerta está cerrada
-    if (!doorIsOpened) {
-      // Se añade la tecla al buffer
-      readingBuffer = readingBuffer + key;
-      Serial.println("Contenido buffer lectura: " + readingBuffer);
+void userHasPressedAKey(char key) {
+  Serial.println("Tecla pulsada: " + String(key));
 
-      // Si se han introducido 4 teclas y coinciden con la contraseña
-      if (readingBuffer.length() == 4 && readingBuffer == password) {
-        userHasIntroducedCorrectPassword();
-      }
-      // Si se han introducido 4 teclas, pero NO coinciden con la contraseña
-      else if (readingBuffer.length() == 4 && readingBuffer != password) {
-        userHasIntroducedWrongPassword();
-      }
+  // Si la puerta está cerrada
+  if (!doorIsOpened) {
+    userHasPressedAKeyWhileDoorWasClosed(key);
+  }
+  // Si la puerta está abierta y se pulsa la tecla C
+  else if (doorIsOpened && key == 'C') {
+    Serial.println("\n> Se fuerza al cierre de la puerta");
+    // Se cierra la puerta
+    closeTheDoor();
+  }
+}
 
-    }
-    // Si la puerta está abierta y se pulsa la tecla C
-    else if (doorIsOpened && key == 'C') {
-      Serial.println("\n> Se fuerza al cierre de la puerta");
-      // Se cierra la puerta
-      closeTheDoor();
-    }
+void userHasPressedAKeyWhileDoorWasClosed(char key) {
+  // Se añade la tecla al buffer
+  readingBuffer = readingBuffer + key;
+  Serial.println("Contenido buffer lectura: " + readingBuffer);
 
+  // Si se han introducido 4 teclas y coinciden con la contraseña
+  if (readingBuffer.length() == 4 && readingBuffer == password) {
+    userHasIntroducedCorrectPassword();
+  }
+  // Si se han introducido 4 teclas, pero NO coinciden con la contraseña
+  else if (readingBuffer.length() == 4 && readingBuffer != password) {
+    userHasIntroducedWrongPassword();
   }
 }
 
