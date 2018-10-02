@@ -28,10 +28,6 @@ byte columnsPins[numColumns] = {A0, A1, A2, A3}; // Pines utilizados para las co
 // Creamos un objeto Keypad que representa el teclado
 Keypad _keypad = Keypad(makeKeymap(keys), rowsPins, columnsPins, numRows, numColumns);
 
-// Buffer de lectura en el que iremos almacenando todas las teclas que pulsa el usuario
-String readingBuffer = "";
-
-
 void setup() {
   Serial.begin(9600);
   Serial.println("\n---------\n  Setup\n---------");

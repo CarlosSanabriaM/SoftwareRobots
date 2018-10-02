@@ -29,6 +29,11 @@ byte columnsPins[numColumns] = {A0, A1, A2, A3}; // Pines utilizados para las co
 boolean doorIsOpened = false;
 // Almacena el instante en el que se abrió la puerta en milisegundos
 double timeDoorWasOpened;
+// Almacena la contraseña
+String password = "9876";
+
+// Buffer de lectura en el que iremos almacenando todas las teclas que pulsa el usuario
+String readingBuffer = "";
 
 // Creamos un objeto Keypad que representa el teclado
 Keypad _keypad = Keypad(makeKeymap(keys), rowsPins, columnsPins, numRows, numColumns);
@@ -70,18 +75,43 @@ void checkKeystrokes() {
   if (key != '\0') {
     Serial.println("Tecla pulsada: " + String(key));
 
-    // Si la tecla pulsada es la A y la puerta está cerrada
-    if (key == 'A' && !doorIsOpened) {
-      // Abrimos la puerta durante 5 segundos
-      openTheDoorFor5Seconds();
+    // Si la puerta está cerrada
+    if (!doorIsOpened) {
+      // Se añade la tecla al buffer
+      readingBuffer = readingBuffer + key;
+      Serial.println("Contenido buffer lectura: " + readingBuffer);
+
+      // Si se han introducido 4 teclas y coinciden con la contraseña
+      if (readingBuffer.length() == 4 && readingBuffer == password) {
+        userHasIntroducedCorrectPassword();
+      }
+      // Si se han introducido 4 teclas, pero NO coinciden con la contraseña
+      else if (readingBuffer.length() == 4 && readingBuffer != password) {
+        userHasIntroducedWrongPassword();
+      }
+
     }
-    // Si la tecla pulsada es la C y la puerta está abierta
-    else if (key == 'C' && doorIsOpened) {
+    // Si la puerta está abierta y se pulsa la tecla C
+    else if (doorIsOpened && key == 'C') {
       Serial.println("\n> Se fuerza al cierre de la puerta");
       // Se cierra la puerta
       closeTheDoor();
     }
+
   }
+}
+
+void userHasIntroducedCorrectPassword() {
+  /*apagar led verde un segundo*/
+  readingBuffer = "";
+
+  // Abrimos la puerta durante 5 segundos
+  openTheDoorFor5Seconds();
+}
+
+void userHasIntroducedWrongPassword() {
+  /*blinkDoor3Times()*/
+  readingBuffer = "";
 }
 
 void openTheDoorFor5Seconds() {
