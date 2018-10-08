@@ -270,11 +270,11 @@ boolean somethingInsideTheDoor() {
   // Si el valor de la luz es menor o igual que el valor a partir del cual se considera que no hay luz
   if (lightValue <= lightSensorDetectionValue) {
     // Hay alguien dentro
-    Serial.println("> Hay algo dentro");
+    Serial.println("\n> Hay algo dentro");
     return true;
   }
   else {
-    //Serial.println("> No hay nadie dentro");
+    //Serial.println("> No hay nada dentro");
     return false;
   }
 }
