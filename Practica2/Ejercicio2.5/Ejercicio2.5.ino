@@ -31,10 +31,9 @@ String readingBuffer = "";
 Keypad _keypad = Keypad(makeKeymap(keys), rowsPins, columnsPins, numRows, numColumns);
 
 // Variables para el sensor de ultrasonidos
-long distance;
-long responseTime;
 const int pinTrig = 9;
 const int pinEcho = 8;
+const int distanceSomethingInFrontOfTheDoor = 10; // distancia en cm a partir de la cual se considera que hay algo delante de la puerta
 
 void setup() {
   Serial.begin(9600);
@@ -62,8 +61,6 @@ void loop() {
   // Comprobamos si se pulsa el teclado
   checkKeystrokes();
 
-  
-
   // Si la puerta está cerrada, y detecta alguien dentro, esta se abre
   checkDoorClosedAndSomethingInside();
 }
@@ -85,7 +82,8 @@ void checkDoorOpenedAndSomethingInsideAndNotInFrontOfTheDoor() {
   }
 }
 
-void checkDoorClosedAndSomethingInside() {
+// TODO -------------------------------------------------------------
+void checkDoorClosedAndSomethingInside() { // TODO ??
   // Si la puerta está cerrada y hay alguien dentro
   if (!doorIsOpened && somethingInsideTheDoor()) {
     // Abrimos la puerta
@@ -107,6 +105,7 @@ void checkDoorClosedAndSomethingInside() {
 
   }
 }
+// TODO -------------------------------------------------------------
 
 void checkKeystrokes() {
   // Obtenemos la tecla pulsada (devuelve '\0' si no se pulsó ninguna)
@@ -192,22 +191,22 @@ void openTheDoorFor5Seconds() {
   timeDoorWasOpened = millis();
 }
 
-void openTheDoorFromInside() {
+void openTheDoorFromInside() {// TODO ???
   Serial.println("\n# Se abre la puerta desde dentro");
 
   // Se encienden/apagan los leds correspondientes
   digitalWrite(ledDoorClosed, LOW);
   digitalWrite(ledDoorOpened, HIGH);
 
-
+  // TODO ???
 }
 
 void tryToCloseTheDoor() {
   //Si hay alguien delante de la puerta, no la podemos cerrar!
   if (somethingInFrontOfTheDoor()) {
     // Dejamos la puerta abierta otros 5 segundos
-    Serial.println("# No se puede cerrar la puerta. Hay algo delante. Se deja la puerta abierta otros 5 segundos");
-    openTheDoorFor5Seconds();
+    Serial.println("# No se puede cerrar la puerta. Se deja la puerta abierta otros 5 segundos");
+    timeDoorWasOpened = millis(); // se vuelve a tomar el tiempo en el que se abrió la puerta
   } 
   // Si no, la cerramos
   else closeTheDoor();
@@ -245,30 +244,15 @@ void switchOffGreenLedFor1Second() {
 }
 
 boolean somethingInFrontOfTheDoor() {
-  // Por seguridad volvemos a poner el Trig a LOW
-  digitalWrite(pinTrig, LOW);
-  delayMicroseconds(5);
-
-  // Emitimos el pulso ultrasónico
-  digitalWrite(pinTrig, HIGH);
-  delayMicroseconds(10);
-
-  // Medimos la longitud del pulso entrante
-  responseTime = pulseIn(pinEcho, HIGH);
-
-  // Calcular la distancia conociendo la velocidad
-  distance = int(0.01716 * responseTime);
-  //Serial.println("Distancia " + String(distance) + "cm");
-
-  // Si la distancia es 10cm o menos
-  if (distance <= 10) {
+  // Si la distancia al sensor de ultrasonidos es menor o igual que la 
+  // distancia a partir de la cual se considera que hay algo delante de la puerta
+  if(getDistanceFromUltrasonicDistanceSensor() <= distanceSomethingInFrontOfTheDoor){
     // Hay algo delante de la puerta
-    Serial.println("> Hay algo delante de la puerta");
-
+    Serial.println("\n> Hay algo delante de la puerta");
     return true;
   }
-  else {
-    Serial.println("> No hay nada delante de la puerta");
+  else{
+    Serial.println("\n> No hay nada delante de la puerta");
     return false;
   }
 }
@@ -286,4 +270,23 @@ boolean somethingInsideTheDoor() {
     //Serial.println("> No hay nadie dentro");
     return false;
   }
+}
+
+long getDistanceFromUltrasonicDistanceSensor(){
+  // Por seguridad volvemos a poner el Trig a LOW
+  digitalWrite(pinTrig, LOW);
+  delayMicroseconds(5);
+
+  // Emitimos el pulso ultrasónico
+  digitalWrite(pinTrig, HIGH);
+  delayMicroseconds(10);
+
+  // Medimos la longitud del pulso entrante
+  long responseTime = pulseIn(pinEcho, HIGH);
+
+  // Calculamos la distancia conociendo la velocidad
+  long distance = int(0.01716 * responseTime);
+  Serial.println("Distancia sensor ultrasonidos: " + String(distance) + "cm");
+
+  return distance;
 }
