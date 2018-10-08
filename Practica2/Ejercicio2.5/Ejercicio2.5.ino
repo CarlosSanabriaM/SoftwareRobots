@@ -1,4 +1,5 @@
 #include <Keypad.h>
+#include <TM1637.h>
 
 // Pines utilizados para los estados abierto y cerrado de la puerta
 const int ledDoorOpened = 6; // es un led rojo, que cuando está encendido indica puerta abierta/abriéndose
@@ -38,6 +39,16 @@ const int distanceSomethingInFrontOfTheDoor = 10; // distancia en cm a partir de
 // Variables para el sensor de luz (sensor interior)
 const int lightSensorDetectionValue = 100;
 
+// Número de usuarios que han entrado por la puerta
+int numUsersHaveEntered = 0;
+
+// Variables para la pantalla de 7 segmentos y 4 dígitos
+int pinClk = 11; // ha de ser un pin digital PWM
+int pinDio = 12;
+
+// Creamos un objeto TM1637 que representa la pantalla
+TM1637 screen(pinClk, pinDio);
+
 void setup() {
   Serial.begin(9600);
   Serial.println("\n---------\n  Setup\n---------");
@@ -52,6 +63,12 @@ void setup() {
   // Se configuran los pines del sensor ultrasonidos
   pinMode(pinTrig, OUTPUT);
   pinMode(pinEcho, INPUT);
+
+  // Inicializamos la pantalla de 7 segmentos y 4 dígitos
+  screen.init();
+  screen.set(BRIGHT_TYPICAL); //BRIGHT_TYPICAL = 2; BRIGHT_DARKEST = 0; BRIGHTEST = 7;
+
+  delay(1500); // Esperamos a que se inicie la pantalla
 }
 
 void loop() {
@@ -74,7 +91,7 @@ void checkIfTimeHasPassed() {
   if (doorIsOpened && millis() - timeDoorWasOpened >= 5000) {
     Serial.println("\n> Se acaban los 5 segundos de apertura");
     // Se intenta cerrar la puerta
-    tryToCloseTheDoor();
+    tryToCloseTheDoor(true); // el usuario ha entrado
   }
 }
 
@@ -82,7 +99,7 @@ void checkIfSomeoneHasEntered() {
   // Si la puerta está abierta y hay alguien dentro
   if (doorIsOpened && somethingInsideTheDoor()) {
     // Intentamos cerrar la puerta (dentro se comprueba que no hay nada delante)
-    tryToCloseTheDoor();
+    tryToCloseTheDoor(true); // el usuario ha entrado
   }
 }
 
@@ -132,7 +149,7 @@ void userHasPressedAKey(char key) {
   else if (doorIsOpened && key == 'C') {
     Serial.println("\n> Se fuerza al cierre de la puerta");
     // Se intenta cerrar la puerta
-    tryToCloseTheDoor();
+    tryToCloseTheDoor(true); // el usuario ha entrado
   }
 }
 
@@ -207,18 +224,28 @@ void openTheDoorFromInside() {// TODO ???
 }
 // TODO -------------------------------------------------------------
 
-void tryToCloseTheDoor() {
+void tryToCloseTheDoor(boolean userIsEntering) {
   //Si hay alguien delante de la puerta, no la podemos cerrar!
   if (somethingInFrontOfTheDoor()) {
     // Dejamos la puerta abierta otros 5 segundos
     Serial.println("# No se puede cerrar la puerta. Se deja la puerta abierta otros 5 segundos");
     timeDoorWasOpened = millis(); // se vuelve a tomar el tiempo en el que se abrió la puerta
-  } 
-  // Si no, la cerramos
-  else closeTheDoor();
+  }
+  // Si no hay nadie delante de la puerta
+  else {
+    // La cerramos
+    closeTheDoor();
+
+    // Si el usuario estaba entrando
+    if (userIsEntering) {
+      // Contabilizamos que acaba de entrar un usuario
+      newUserHasEntered();
+    }
+
+  }
 }
 
-void closeTheDoor(){
+void closeTheDoor() {
   Serial.println("# Se cierra la puerta\n");
 
   // Se encienden/apagan los leds correspondientes
@@ -227,6 +254,29 @@ void closeTheDoor(){
 
   // Se indica que la puerta está cerrada
   doorIsOpened = false;
+}
+
+void newUserHasEntered() {
+  // Aumentamos el número de usuarios que han entrado
+  numUsersHaveEntered++;
+  Serial.println("$ Un usuario acaba de entrar. Num usuarios han entrado: " + String(numUsersHaveEntered) + "\n");
+
+  // Actualizamos en el display el número de usuarios que han entrado
+  displayNumUsersHaveEntered();
+}
+
+/* No se tiene en cuenta que el número de usuarios que han entrado sea mayor de 9999 */
+void displayNumUsersHaveEntered(){
+  // Se obtiene cada uno de los 4 dígitos del número
+  int digit0 = numUsersHaveEntered / 1000;
+  int digit1 = (numUsersHaveEntered - digit0 * 1000) / 100;
+  int digit2 = (numUsersHaveEntered - (digit0 * 1000 + digit1 * 100)) / 10;
+  int digit3 = numUsersHaveEntered - (digit0 * 1000 + digit1 * 100 + digit2 * 10);
+
+  screen.display(0, digit0);
+  screen.display(1, digit1);
+  screen.display(2, digit2);
+  screen.display(3, digit3);
 }
 
 void blinkGreenLed3Times() {
@@ -250,14 +300,14 @@ void switchOffGreenLedFor1Second() {
 }
 
 boolean somethingInFrontOfTheDoor() {
-  // Si la distancia al sensor de ultrasonidos es menor o igual que la 
+  // Si la distancia al sensor de ultrasonidos es menor o igual que la
   // distancia a partir de la cual se considera que hay algo delante de la puerta
-  if(getDistanceFromUltrasonicDistanceSensor() <= distanceSomethingInFrontOfTheDoor){
+  if (getDistanceFromUltrasonicDistanceSensor() <= distanceSomethingInFrontOfTheDoor) {
     // Hay algo delante de la puerta
     Serial.println("\n> Hay algo delante de la puerta");
     return true;
   }
-  else{
+  else {
     Serial.println("\n> No hay nada delante de la puerta");
     return false;
   }
@@ -279,7 +329,7 @@ boolean somethingInsideTheDoor() {
   }
 }
 
-long getDistanceFromUltrasonicDistanceSensor(){
+long getDistanceFromUltrasonicDistanceSensor() {
   // Por seguridad volvemos a poner el Trig a LOW
   digitalWrite(pinTrig, LOW);
   delayMicroseconds(5);
