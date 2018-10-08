@@ -60,7 +60,10 @@ void loop() {
   checkKeystrokes();
 
   // Si la puerta está abierta, y alguien dentro, pero no delante de la puerta, esta se cierra
-  checkSomethingInsideAndNotInFrontOfTheDoor();
+  checkDoorOpenedAndSomethingInsideAndNotInFrontOfTheDoor();
+
+  // Si la puerta está cerrada, y detecta alguien dentro, esta se abre
+  checkDoorClosedAndSomethingInside();
 }
 
 void checkIfTimeHasPassed() {
@@ -72,11 +75,19 @@ void checkIfTimeHasPassed() {
   }
 }
 
-void checkSomethingInsideAndNotInFrontOfTheDoor(){
+void checkDoorOpenedAndSomethingInsideAndNotInFrontOfTheDoor(){
   // Si la puerta está abierta y hay alguien dentro
   if (doorIsOpened && somethingInsideTheDoor()) {
     // Intentamos cerrar la puerta (dentro se comprueba que no hay nada delante)
     closeTheDoor();
+  }
+}
+
+void checkDoorClosedAndSomethingInside(){
+  // Si la puerta está cerrada y hay alguien dentro
+  if (!doorIsOpened && somethingInsideTheDoor()) {
+    // Abrimos la puerta
+    openTheDoorFromInside();
   }
 }
 
@@ -161,7 +172,19 @@ void openTheDoorFor5Seconds() {
 
   // Se indica que la puerta está abierta y se almacena el momento en el que se abrió
   doorIsOpened = true;
+  // Se establece el tiempo en el que se abrió la puerta
   timeDoorWasOpened = millis();
+}
+
+void openTheDoorFromInside() {
+  Serial.println("\n# Se abre la puerta desde dentro");
+
+  // Se encienden/apagan los leds correspondientes
+  digitalWrite(ledDoorClosed, LOW);
+  digitalWrite(ledDoorOpened, HIGH);
+
+  // Se indica que la puerta está abierta y se almacena el momento en el que se abrió
+  doorIsOpened = true;
 }
 
 void closeTheDoor() {
