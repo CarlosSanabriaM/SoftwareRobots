@@ -58,6 +58,9 @@ void loop() {
 
   // Comprobamos si se pulsa el teclado
   checkKeystrokes();
+
+  // Si la puerta está abierta, y alguien dentro, pero no delante de la puerta, esta se cierra
+  checkSomethingInsideAndNotInFrontOfTheDoor();
 }
 
 void checkIfTimeHasPassed() {
@@ -65,6 +68,14 @@ void checkIfTimeHasPassed() {
   if (doorIsOpened && millis() - timeDoorWasOpened >= 5000) {
     Serial.println("\n> Se acaban los 5 segundos de apertura");
     // Se cierra la puerta
+    closeTheDoor();
+  }
+}
+
+void checkSomethingInsideAndNotInFrontOfTheDoor(){
+  // Si la puerta está abierta y hay alguien dentro
+  if (doorIsOpened && somethingInsideTheDoor()) {
+    // Intentamos cerrar la puerta (dentro se comprueba que no hay nada delante)
     closeTheDoor();
   }
 }
@@ -209,8 +220,7 @@ boolean somethingInFrontOfTheDoor() {
 
   // Calcular la distancia conociendo la velocidad
   distance = int(0.01716 * responseTime);
-
-  Serial.println("Distancia " + String(distance) + "cm");
+  //Serial.println("Distancia " + String(distance) + "cm");
 
   // Si la distancia es 10cm o menos
   if(distance <= 10){
@@ -221,6 +231,21 @@ boolean somethingInFrontOfTheDoor() {
   }
   else{
     Serial.println("> No hay nada delante de la puerta");
+    return false;
+  }
+}
+
+boolean somethingInsideTheDoor(){
+  // Leer lectura analógica
+  int lightValue = analogRead(A4); 
+
+  if (lightValue < 100) {
+    // Hay alguien dentro
+    Serial.println("> Hay algo dentro");
+    return true;
+  } 
+  else{
+    //Serial.println("> No hay nadie dentro");
     return false;
   }
 }
