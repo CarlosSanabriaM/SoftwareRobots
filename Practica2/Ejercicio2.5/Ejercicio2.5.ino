@@ -172,7 +172,6 @@ void openTheDoorFor5Seconds() {
 
   // Se indica que la puerta está abierta y se almacena el momento en el que se abrió
   doorIsOpened = true;
-  // Se establece el tiempo en el que se abrió la puerta
   timeDoorWasOpened = millis();
 }
 
@@ -183,8 +182,8 @@ void openTheDoorFromInside() {
   digitalWrite(ledDoorClosed, LOW);
   digitalWrite(ledDoorOpened, HIGH);
 
-  // Se indica que la puerta está abierta y se almacena el momento en el que se abrió
-  doorIsOpened = true;
+  // Se indica que la puerta está abierta desde dentro
+  doorIsOpenedFromInside = true;
 }
 
 void closeTheDoor() {
