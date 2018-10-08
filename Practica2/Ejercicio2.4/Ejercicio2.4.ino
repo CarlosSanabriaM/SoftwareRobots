@@ -30,6 +30,12 @@ String readingBuffer = "";
 // Creamos un objeto Keypad que representa el teclado
 Keypad _keypad = Keypad(makeKeymap(keys), rowsPins, columnsPins, numRows, numColumns);
 
+// Variables para el sensor de ultrasonidos
+long distance;
+long responseTime;
+const int pinTrig = 9;
+const int pinEcho = 8;
+
 void setup() {
   Serial.begin(9600);
   Serial.println("\n---------\n  Setup\n---------");
@@ -40,6 +46,10 @@ void setup() {
 
   // Inicialmente la puerta está cerrada
   digitalWrite(ledDoorClosed, HIGH);
+
+  // Se configuran los pines del sensor ultrasonidos
+  pinMode(pinTrig, OUTPUT);
+  pinMode(pinEcho, INPUT);
 }
 
 void loop() {
@@ -95,9 +105,9 @@ void userHasPressedAKeyWhileDoorWasClosed(char key) {
   }
 }
 
-void userHasIntroducedAPassword(){
+void userHasIntroducedAPassword() {
   Serial.println("\n@ Contrasenia introducida: " + readingBuffer);
-  
+
   // Si la contraseña introducida coincide con la correcta
   if (readingBuffer == password) {
     userHasIntroducedCorrectPassword();
@@ -110,10 +120,10 @@ void userHasIntroducedAPassword(){
 
 void userHasIntroducedCorrectPassword() {
   Serial.println("\n$ Contrasenia correcta");
-  
+
   // Se resetea el buffer
   readingBuffer = "";
-  
+
   // Se apaga el led verde un segundo
   switchOffGreenLedFor1Second();
 
@@ -123,10 +133,10 @@ void userHasIntroducedCorrectPassword() {
 
 void userHasIntroducedWrongPassword() {
   Serial.println("\n$ Contrasenia incorrecta\n");
-  
+
   // Se resetea el buffer
   readingBuffer = "";
-  
+
   // El led verde parpadea 3 veces y se queda encendido
   blinkGreenLed3Times();
 }
@@ -144,6 +154,17 @@ void openTheDoorFor5Seconds() {
 }
 
 void closeTheDoor() {
+
+  //Se comprueba si hay alguien delante de la puerta
+  if(somethingInFrontOfTheDoor()){
+    // Dejamos la puerta abierta otros 5 segundos
+    Serial.println("# Se deja la puerta abierta otros 5 segundos");
+    openTheDoorFor5Seconds();
+
+    // Salimos de la función
+    return;
+  }
+
   Serial.println("# Se cierra la puerta\n");
 
   // Se encienden/apagan los leds correspondientes
@@ -154,7 +175,7 @@ void closeTheDoor() {
   doorIsOpened = false;
 }
 
-void blinkGreenLed3Times(){
+void blinkGreenLed3Times() {
   // Durante este tiempo no se procesan las teclas pulsadas, porque no se ejecuta el método loop
   blinkGreenLed();
   delay(1000);
@@ -163,13 +184,43 @@ void blinkGreenLed3Times(){
   blinkGreenLed();
 }
 
-void blinkGreenLed(){
+void blinkGreenLed() {
   switchOffGreenLedFor1Second();
   digitalWrite(ledDoorClosed, HIGH);
 }
 
-void switchOffGreenLedFor1Second(){
+void switchOffGreenLedFor1Second() {
   // Durante este tiempo no se procesan las teclas pulsadas, porque no se ejecuta el método loop
   digitalWrite(ledDoorClosed, LOW);
   delay(1000);
+}
+
+boolean somethingInFrontOfTheDoor() {
+  // Por seguridad volvemos a poner el Trig a LOW
+  digitalWrite(pinTrig, LOW);
+  delayMicroseconds(5);
+
+  // Emitimos el pulso ultrasónico
+  digitalWrite(pinTrig, HIGH);
+  delayMicroseconds(10);
+
+  // Medimos la longitud del pulso entrante
+  responseTime = pulseIn(pinEcho, HIGH);
+
+  // Calcular la distancia conociendo la velocidad
+  distance = int(0.01716 * responseTime);
+
+  Serial.println("Distancia " + String(distance) + "cm");
+
+  // Si la distancia es 10cm o menos
+  if(distance <= 10){
+    // Hay algo delante de la puerta
+    Serial.println("> Hay algo delante de la puerta");
+    
+    return true;
+  }
+  else{
+    Serial.println("> No hay nada delante de la puerta");
+    return false;
+  }
 }
