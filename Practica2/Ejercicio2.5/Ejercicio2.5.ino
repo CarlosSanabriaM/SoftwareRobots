@@ -56,11 +56,13 @@ void loop() {
   // Comprobamos si la puerta está abierta y han pasado los 5 segundos
   checkIfTimeHasPassed();
 
+  // Comprobamos si la puerta está abierta, y alguien dentro, pero no delante de la puerta, esta se cierra
+  checkDoorOpenedAndSomethingInsideAndNotInFrontOfTheDoor();
+
   // Comprobamos si se pulsa el teclado
   checkKeystrokes();
 
-  // Si la puerta está abierta, y alguien dentro, pero no delante de la puerta, esta se cierra
-  checkDoorOpenedAndSomethingInsideAndNotInFrontOfTheDoor();
+  
 
   // Si la puerta está cerrada, y detecta alguien dentro, esta se abre
   checkDoorClosedAndSomethingInside();
@@ -70,24 +72,39 @@ void checkIfTimeHasPassed() {
   // Si la puerta está abierta y han pasado 5 segundos desde que se abrió
   if (doorIsOpened && millis() - timeDoorWasOpened >= 5000) {
     Serial.println("\n> Se acaban los 5 segundos de apertura");
-    // Se cierra la puerta
-    closeTheDoor();
+    // Se intenta cerrar la puerta
+    tryToCloseTheDoor();
   }
 }
 
-void checkDoorOpenedAndSomethingInsideAndNotInFrontOfTheDoor(){
+void checkDoorOpenedAndSomethingInsideAndNotInFrontOfTheDoor() {
   // Si la puerta está abierta y hay alguien dentro
   if (doorIsOpened && somethingInsideTheDoor()) {
     // Intentamos cerrar la puerta (dentro se comprueba que no hay nada delante)
-    closeTheDoor();
+    tryToCloseTheDoor();
   }
 }
 
-void checkDoorClosedAndSomethingInside(){
+void checkDoorClosedAndSomethingInside() {
   // Si la puerta está cerrada y hay alguien dentro
   if (!doorIsOpened && somethingInsideTheDoor()) {
     // Abrimos la puerta
     openTheDoorFromInside();
+
+    boolean x = true;
+    boolean somethingInside = somethingInsideTheDoor();
+    while (x) {
+      somethingInside = somethingInsideTheDoor();
+      if (!somethingInside) {
+        x = !somethingInFrontOfTheDoor();
+      }
+      Serial.println("# Se cierra la puerta\n");
+
+      // Se encienden/apagan los leds correspondientes
+      digitalWrite(ledDoorClosed, HIGH);
+      digitalWrite(ledDoorOpened, LOW);
+    }
+
   }
 }
 
@@ -111,8 +128,8 @@ void userHasPressedAKey(char key) {
   // Si la puerta está abierta y se pulsa la tecla C
   else if (doorIsOpened && key == 'C') {
     Serial.println("\n> Se fuerza al cierre de la puerta");
-    // Se cierra la puerta
-    closeTheDoor();
+    // Se intenta cerrar la puerta
+    tryToCloseTheDoor();
   }
 }
 
@@ -182,22 +199,21 @@ void openTheDoorFromInside() {
   digitalWrite(ledDoorClosed, LOW);
   digitalWrite(ledDoorOpened, HIGH);
 
-  // Se indica que la puerta está abierta desde dentro
-  doorIsOpenedFromInside = true;
+
 }
 
-void closeTheDoor() {
-
-  //Se comprueba si hay alguien delante de la puerta
-  if(somethingInFrontOfTheDoor()){
+void tryToCloseTheDoor() {
+  //Si hay alguien delante de la puerta, no la podemos cerrar!
+  if (somethingInFrontOfTheDoor()) {
     // Dejamos la puerta abierta otros 5 segundos
-    Serial.println("# Se deja la puerta abierta otros 5 segundos");
+    Serial.println("# No se puede cerrar la puerta. Hay algo delante. Se deja la puerta abierta otros 5 segundos");
     openTheDoorFor5Seconds();
+  } 
+  // Si no, la cerramos
+  else closeTheDoor();
+}
 
-    // Salimos de la función
-    return;
-  }
-
+void closeTheDoor(){
   Serial.println("# Se cierra la puerta\n");
 
   // Se encienden/apagan los leds correspondientes
@@ -245,28 +261,28 @@ boolean somethingInFrontOfTheDoor() {
   //Serial.println("Distancia " + String(distance) + "cm");
 
   // Si la distancia es 10cm o menos
-  if(distance <= 10){
+  if (distance <= 10) {
     // Hay algo delante de la puerta
     Serial.println("> Hay algo delante de la puerta");
-    
+
     return true;
   }
-  else{
+  else {
     Serial.println("> No hay nada delante de la puerta");
     return false;
   }
 }
 
-boolean somethingInsideTheDoor(){
+boolean somethingInsideTheDoor() {
   // Leer lectura analógica
-  int lightValue = analogRead(A4); 
+  int lightValue = analogRead(A4);
 
   if (lightValue < 100) {
     // Hay alguien dentro
     Serial.println("> Hay algo dentro");
     return true;
-  } 
-  else{
+  }
+  else {
     //Serial.println("> No hay nadie dentro");
     return false;
   }

@@ -1,3 +1,11 @@
+/*
+   Circuito disponible en Tinkercad en el siguiente enlace:
+   https://www.tinkercad.com/things/2TBJ2P1Zh5X
+
+   La sección "Código" está vacía. Hay que copiar el código de
+   este fichero e introducirlo ahí para probar el funcionamiento.
+*/
+
 #include <Keypad.h>
 
 // Pines utilizados para los estados abierto y cerrado de la puerta
@@ -31,10 +39,9 @@ String readingBuffer = "";
 Keypad _keypad = Keypad(makeKeymap(keys), rowsPins, columnsPins, numRows, numColumns);
 
 // Variables para el sensor de ultrasonidos
-long distance;
-long responseTime;
 const int pinTrig = 9;
 const int pinEcho = 8;
+const int distanceSomethingInFrontOfTheDoor = 10; // distancia en cm a partir de la cual se considera que hay algo delante de la puerta
 
 void setup() {
   Serial.begin(9600);
@@ -64,8 +71,8 @@ void checkIfTimeHasPassed() {
   // Si la puerta está abierta y han pasado 5 segundos desde que se abrió
   if (doorIsOpened && millis() - timeDoorWasOpened >= 5000) {
     Serial.println("\n> Se acaban los 5 segundos de apertura");
-    // Se cierra la puerta
-    closeTheDoor();
+    // Se intenta cerrar la puerta
+    tryToCloseTheDoor();
   }
 }
 
@@ -89,8 +96,8 @@ void userHasPressedAKey(char key) {
   // Si la puerta está abierta y se pulsa la tecla C
   else if (doorIsOpened && key == 'C') {
     Serial.println("\n> Se fuerza al cierre de la puerta");
-    // Se cierra la puerta
-    closeTheDoor();
+    // Se intenta cerrar la puerta
+    tryToCloseTheDoor();
   }
 }
 
@@ -153,18 +160,18 @@ void openTheDoorFor5Seconds() {
   timeDoorWasOpened = millis();
 }
 
-void closeTheDoor() {
-
-  //Se comprueba si hay alguien delante de la puerta
-  if(somethingInFrontOfTheDoor()){
+void tryToCloseTheDoor() {
+  //Si hay alguien delante de la puerta, no la podemos cerrar!
+  if (somethingInFrontOfTheDoor()) {
     // Dejamos la puerta abierta otros 5 segundos
-    Serial.println("# Se deja la puerta abierta otros 5 segundos");
-    openTheDoorFor5Seconds();
+    Serial.println("# No se puede cerrar la puerta. Se deja la puerta abierta otros 5 segundos");
+    timeDoorWasOpened = millis(); // se vuelve a tomar el tiempo en el que se abrió la puerta
+  } 
+  // Si no, la cerramos
+  else closeTheDoor();
+}
 
-    // Salimos de la función
-    return;
-  }
-
+void closeTheDoor(){
   Serial.println("# Se cierra la puerta\n");
 
   // Se encienden/apagan los leds correspondientes
@@ -196,6 +203,20 @@ void switchOffGreenLedFor1Second() {
 }
 
 boolean somethingInFrontOfTheDoor() {
+  // Si la distancia al sensor de ultrasonidos es menor o igual que la 
+  // distancia a partir de la cual se considera que hay algo delante de la puerta
+  if(getDistanceFromUltrasonicDistanceSensor() <= distanceSomethingInFrontOfTheDoor){
+    // Hay algo delante de la puerta
+    Serial.println("\n> Hay algo delante de la puerta");
+    return true;
+  }
+  else{
+    Serial.println("\n> No hay nada delante de la puerta");
+    return false;
+  }
+}
+
+long getDistanceFromUltrasonicDistanceSensor(){
   // Por seguridad volvemos a poner el Trig a LOW
   digitalWrite(pinTrig, LOW);
   delayMicroseconds(5);
@@ -205,22 +226,11 @@ boolean somethingInFrontOfTheDoor() {
   delayMicroseconds(10);
 
   // Medimos la longitud del pulso entrante
-  responseTime = pulseIn(pinEcho, HIGH);
+  long responseTime = pulseIn(pinEcho, HIGH);
 
-  // Calcular la distancia conociendo la velocidad
-  distance = int(0.01716 * responseTime);
+  // Calculamos la distancia conociendo la velocidad
+  long distance = int(0.01716 * responseTime);
+  Serial.println("Distancia sensor ultrasonidos: " + String(distance) + "cm");
 
-  Serial.println("Distancia " + String(distance) + "cm");
-
-  // Si la distancia es 10cm o menos
-  if(distance <= 10){
-    // Hay algo delante de la puerta
-    Serial.println("> Hay algo delante de la puerta");
-    
-    return true;
-  }
-  else{
-    Serial.println("> No hay nada delante de la puerta");
-    return false;
-  }
+  return distance;
 }
