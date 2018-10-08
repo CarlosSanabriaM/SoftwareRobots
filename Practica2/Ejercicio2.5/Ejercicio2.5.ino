@@ -30,10 +30,13 @@ String readingBuffer = "";
 // Creamos un objeto Keypad que representa el teclado
 Keypad _keypad = Keypad(makeKeymap(keys), rowsPins, columnsPins, numRows, numColumns);
 
-// Variables para el sensor de ultrasonidos
+// Variables para el sensor de ultrasonidos (sensor exterior)
 const int pinTrig = 9;
 const int pinEcho = 8;
 const int distanceSomethingInFrontOfTheDoor = 10; // distancia en cm a partir de la cual se considera que hay algo delante de la puerta
+
+// Variables para el sensor de luz (sensor interior)
+const int lightSensorDetectionValue = 100;
 
 void setup() {
   Serial.begin(9600);
@@ -55,15 +58,16 @@ void loop() {
   // Comprobamos si la puerta está abierta y han pasado los 5 segundos
   checkIfTimeHasPassed();
 
-  // Comprobamos si la puerta está abierta, y alguien dentro, pero no delante de la puerta, esta se cierra
-  checkDoorOpenedAndSomethingInsideAndNotInFrontOfTheDoor();
+  // Comprobamos si la puerta está abierta y alguien ha entrado, para así cerrar la puerta
+  checkIfSomeoneHasEntered();
 
   // Comprobamos si se pulsa el teclado
   checkKeystrokes();
 
   // Si la puerta está cerrada, y detecta alguien dentro, esta se abre
-  checkDoorClosedAndSomethingInside();
+  //checkDoorClosedAndSomethingInside(); // TODO ??
 }
+
 
 void checkIfTimeHasPassed() {
   // Si la puerta está abierta y han pasado 5 segundos desde que se abrió
@@ -74,7 +78,7 @@ void checkIfTimeHasPassed() {
   }
 }
 
-void checkDoorOpenedAndSomethingInsideAndNotInFrontOfTheDoor() {
+void checkIfSomeoneHasEntered() {
   // Si la puerta está abierta y hay alguien dentro
   if (doorIsOpened && somethingInsideTheDoor()) {
     // Intentamos cerrar la puerta (dentro se comprueba que no hay nada delante)
@@ -191,6 +195,7 @@ void openTheDoorFor5Seconds() {
   timeDoorWasOpened = millis();
 }
 
+// TODO -------------------------------------------------------------
 void openTheDoorFromInside() {// TODO ???
   Serial.println("\n# Se abre la puerta desde dentro");
 
@@ -200,6 +205,7 @@ void openTheDoorFromInside() {// TODO ???
 
   // TODO ???
 }
+// TODO -------------------------------------------------------------
 
 void tryToCloseTheDoor() {
   //Si hay alguien delante de la puerta, no la podemos cerrar!
@@ -261,7 +267,8 @@ boolean somethingInsideTheDoor() {
   // Leer lectura analógica
   int lightValue = analogRead(A4);
 
-  if (lightValue < 100) {
+  // Si el valor de la luz es menor o igual que el valor a partir del cual se considera que no hay luz
+  if (lightValue <= lightSensorDetectionValue) {
     // Hay alguien dentro
     Serial.println("> Hay algo dentro");
     return true;
