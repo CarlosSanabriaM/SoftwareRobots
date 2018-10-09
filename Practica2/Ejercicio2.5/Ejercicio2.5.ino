@@ -19,9 +19,12 @@ byte rowsPins[numRows] = {2, 3, 4, 5}; // Pines utilizados para las filas
 byte columnsPins[numColumns] = {A0, A1, A2, A3}; // Pines utilizados para las columnas
 
 // Indica el estado de la puerta (abierta/cerrada)
-boolean doorIsOpened = false;
-// Almacena el instante en el que se abrió la puerta en milisegundos
+boolean doorIsOpened = false; // puerta abierta desde fuera // TODO - renombrar!! doorIsOpenedFromOutside
+boolean doorIsOpenedFromInside = false; // puerta abierta desde dentro
+// Almacena el instante en el que se abrió la puerta (en milisegundos)
 double timeDoorWasOpened;
+// Almacena el instante de la última vez que se intentó cerrar la puerta cuando hay alguien saliendo
+double timeLastTryToCloseTheDoorWhenUserIsGoingOut;
 // Almacena la contraseña
 String password = "9876";
 
@@ -68,21 +71,30 @@ void setup() {
   screen.init();
   screen.set(BRIGHT_TYPICAL); //BRIGHT_TYPICAL = 2; BRIGHT_DARKEST = 0; BRIGHTEST = 7;
 
-  delay(1500); // Esperamos a que se inicie la pantalla
+  delay(1500); // Esperamos a que se inicie la pantalla // TODO ???
 }
 
 void loop() {
-  // Comprobamos si la puerta está abierta y han pasado los 5 segundos
-  checkIfTimeHasPassed();
+  // Si la puerta no está abierta desde dentro (está cerrada o está abierta desde fuera)
+  if (!doorIsOpenedFromInside) {
+    // Comprobamos si la puerta está abierta y han pasado los 5 segundos, para intentar cerrarla
+    checkIfTimeHasPassed();
 
-  // Comprobamos si la puerta está abierta y alguien ha entrado, para así cerrar la puerta
-  checkIfSomeoneHasEntered();
+    // Comprobamos si la puerta está abierta y alguien ha entrado, para intentar cerrarla
+    checkIfSomeoneHasEntered();
 
-  // Comprobamos si se pulsa el teclado
-  checkKeystrokes();
+    // Comprobamos si se pulsa el teclado, por si se pulsa C y la puerta está abierta, intentar cerrarla,
+    // o almacenar contraseñas si está cerrada
+    checkKeystrokes();
+  }
+  // Si la puerta está abierta desde dentro
+  else {
+    // Comprobamos si ya no hay nadie dentro, para intentar cerrar la puerta
+    checkIfSomeoneHasGoneOutside();
+  }
 
   // Si la puerta está cerrada, y detecta alguien dentro, esta se abre
-  //checkDoorClosedAndSomethingInside(); // TODO ??
+  checkIfSomeoneWantsToGoOutside();
 }
 
 
@@ -91,39 +103,32 @@ void checkIfTimeHasPassed() {
   if (doorIsOpened && millis() - timeDoorWasOpened >= 5000) {
     Serial.println("\n> Se acaban los 5 segundos de apertura");
     // Se intenta cerrar la puerta
-    tryToCloseTheDoor(true); // el usuario ha entrado
+    tryToCloseTheDoorWhenUserIsGoingOut(); // el usuario está saliendo
   }
 }
 
 void checkIfSomeoneHasEntered() {
   // Si la puerta está abierta y hay alguien dentro
-  if (doorIsOpened && somethingInsideTheDoor()) {
+  if (doorIsOpened && somethingInsideTheDoor() && YYYYYYYY) { /* TODO - añadir aqui la comprobación de que el tiempo entre mediciones ha pasado */
     // Intentamos cerrar la puerta (dentro se comprueba que no hay nada delante)
-    tryToCloseTheDoor(true); // el usuario ha entrado
+    tryToCloseTheDoorWhenUserIsGoingOut(); // el usuario está saliendo
   }
 }
 
 // TODO -------------------------------------------------------------
-void checkDoorClosedAndSomethingInside() { // TODO ??
+void checkIfSomeoneWantsToGoOutside() {
   // Si la puerta está cerrada y hay alguien dentro
   if (!doorIsOpened && somethingInsideTheDoor()) {
-    // Abrimos la puerta
+    // Abrimos la puerta desde dentro
     openTheDoorFromInside();
+  }
+}
 
-    boolean x = true;
-    boolean somethingInside = somethingInsideTheDoor();
-    while (x) {
-      somethingInside = somethingInsideTheDoor();
-      if (!somethingInside) {
-        x = !somethingInFrontOfTheDoor();
-      }
-      Serial.println("# Se cierra la puerta\n");
-
-      // Se encienden/apagan los leds correspondientes
-      digitalWrite(ledDoorClosed, HIGH);
-      digitalWrite(ledDoorOpened, LOW);
-    }
-
+void checkIfSomeoneHasGoneOutside() {
+  // Si la puerta está abierta y ya no hay nadie dentro
+  if (doorIsOpened && !somethingInsideTheDoor()) {
+    // Intentamos cerrar la puerta (dentro se comprueba que no hay nada delante)
+    tryToCloseTheDoorWhenUserIsGoingOut(); // el usuario está saliendo
   }
 }
 // TODO -------------------------------------------------------------
@@ -149,7 +154,7 @@ void userHasPressedAKey(char key) {
   else if (doorIsOpened && key == 'C') {
     Serial.println("\n> Se fuerza al cierre de la puerta");
     // Se intenta cerrar la puerta
-    tryToCloseTheDoor(true); // el usuario ha entrado
+    tryToCloseTheDoorWhenUserIsEntering(); // el usuario está entrando
   }
 }
 
@@ -202,10 +207,7 @@ void userHasIntroducedWrongPassword() {
 
 void openTheDoorFor5Seconds() {
   Serial.println("\n# Se abre la puerta");
-
-  // Se encienden/apagan los leds correspondientes
-  digitalWrite(ledDoorClosed, LOW);
-  digitalWrite(ledDoorOpened, HIGH);
+  openTheDoor();
 
   // Se indica que la puerta está abierta y se almacena el momento en el que se abrió
   doorIsOpened = true;
@@ -213,40 +215,53 @@ void openTheDoorFor5Seconds() {
 }
 
 // TODO -------------------------------------------------------------
-void openTheDoorFromInside() {// TODO ???
+void openTheDoorFromInside() {
   Serial.println("\n# Se abre la puerta desde dentro");
+  openTheDoor();
 
-  // Se encienden/apagan los leds correspondientes
-  digitalWrite(ledDoorClosed, LOW);
-  digitalWrite(ledDoorOpened, HIGH);
-
-  // TODO ???
+  // Se indica que la puerta está abierta desde dentro
+  doorIsOpenedFromInside = true;
 }
 // TODO -------------------------------------------------------------
 
-void tryToCloseTheDoor(boolean userIsEntering) {
+void openTheDoor() {
+  // Se encienden/apagan los leds correspondientes
+  digitalWrite(ledDoorClosed, LOW);
+  digitalWrite(ledDoorOpened, HIGH);
+}
+
+/*
+ * hay dos casos distintos para intentar cerrar la puerta. Uno cuando esta entrando, y otro cuando esta saliendo. 
+ * En este ultimo, no vale este metodo, pues hay que hacer una espera entre las llamadas al sensor exterior (variable global para ello).
+ * Por tanto, no hace falta el param booleano. 
+ * tryToCloseTheDoorWhenUserIsEntering()
+ * tryToCloseTheDoorWhenUserIsGoindOutside()
+ */
+void tryToCloseTheDoorWhenUserIsEntering() {
   //Si hay alguien delante de la puerta, no la podemos cerrar!
   if (somethingInFrontOfTheDoor()) {
     // Dejamos la puerta abierta otros 5 segundos
-    Serial.println("# No se puede cerrar la puerta. Se deja la puerta abierta otros 5 segundos");
+    Serial.println("# No se puede cerrar la puerta. Alguien está entrando. Se deja la puerta abierta otros 5 segundos");
     timeDoorWasOpened = millis(); // se vuelve a tomar el tiempo en el que se abrió la puerta
   }
-  // Si no hay nadie delante de la puerta
-  else {
-    // La cerramos
-    closeTheDoor();
-
-    // Si el usuario estaba entrando
-    if (userIsEntering) {
-      // Contabilizamos que acaba de entrar un usuario
-      newUserHasEntered();
-    }
-
-  }
+  // Si no hay nadie delante de la puerta, la cerramos
+  else closeTheDoorWhenUserIsEntering();
 }
 
-void closeTheDoor() {
-  Serial.println("# Se cierra la puerta\n");
+void tryToCloseTheDoorWhenUserIsGoingOut() {
+  //Si hay alguien delante de la puerta, no la podemos cerrar!
+  if (somethingInFrontOfTheDoor()) {
+    Serial.println("# No se puede cerrar la puerta. Alguien está saliendo");
+  }
+  // Si no hay nadie delante de la puerta, la cerramos
+  else closeTheDoorWhenUserIsGoingOut();
+
+  // Se toma el tiempo de la última vez que se intentó cerrar la puerta cuando alguien estaba saliendo
+  timeLastTryToCloseTheDoorWhenUserIsGoingOut = millis(); // TODO
+}
+
+void closeTheDoorWhenUserIsEntering() {
+  Serial.println("# Se cierra la puerta después de que alguien ha entrado\n");
 
   // Se encienden/apagan los leds correspondientes
   digitalWrite(ledDoorClosed, HIGH);
@@ -254,6 +269,20 @@ void closeTheDoor() {
 
   // Se indica que la puerta está cerrada
   doorIsOpened = false;
+  
+  // Contabilizamos que acaba de entrar un usuario
+  newUserHasEntered();
+}
+
+void closeTheDoorWhenUserIsGoingOut() {
+  Serial.println("# Se cierra la puerta después de que alguien ha salido\n");
+
+  // Se encienden/apagan los leds correspondientes
+  digitalWrite(ledDoorClosed, HIGH);
+  digitalWrite(ledDoorOpened, LOW);
+
+  // Se indica que la puerta está cerrada
+  doorIsOpenedFromInside = false;
 }
 
 void newUserHasEntered() {
@@ -266,7 +295,7 @@ void newUserHasEntered() {
 }
 
 /* No se tiene en cuenta que el número de usuarios que han entrado sea mayor de 9999 */
-void displayNumUsersHaveEntered(){
+void displayNumUsersHaveEntered() {
   // Se obtiene cada uno de los 4 dígitos del número
   int digit0 = numUsersHaveEntered / 1000;
   int digit1 = (numUsersHaveEntered - digit0 * 1000) / 100;
