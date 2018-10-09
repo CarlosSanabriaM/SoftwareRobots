@@ -19,7 +19,7 @@ byte rowsPins[numRows] = {2, 3, 4, 5}; // Pines utilizados para las filas
 byte columnsPins[numColumns] = {A0, A1, A2, A3}; // Pines utilizados para las columnas
 
 // Indica el estado de la puerta (abierta/cerrada)
-boolean doorIsOpened = false; // puerta abierta desde fuera // TODO - renombrar!! doorIsOpenedFromOutside
+boolean doorIsOpenedFromOutside = false; // puerta abierta desde fuera
 boolean doorIsOpenedFromInside = false; // puerta abierta desde dentro
 // Almacena el instante en el que se abrió la puerta (en milisegundos)
 double timeDoorWasOpened;
@@ -38,6 +38,8 @@ Keypad _keypad = Keypad(makeKeymap(keys), rowsPins, columnsPins, numRows, numCol
 const int pinTrig = 9;
 const int pinEcho = 8;
 const int distanceSomethingInFrontOfTheDoor = 10; // distancia en cm a partir de la cual se considera que hay algo delante de la puerta
+const int delayBetweenUltrasonicSensorMeasurements = 2; // tiempo mínimo (en milisegundos) que se ha de esperar entre cada
+// medición del sensor de ultrasonidos (recomendable más de 20 microsegundos)
 
 // Variables para el sensor de luz (sensor interior)
 const int lightSensorDetectionValue = 100;
@@ -71,7 +73,8 @@ void setup() {
   screen.init();
   screen.set(BRIGHT_TYPICAL); //BRIGHT_TYPICAL = 2; BRIGHT_DARKEST = 0; BRIGHTEST = 7;
 
-  delay(1500); // Esperamos a que se inicie la pantalla // TODO ???
+  // Esperamos a que se inicie la pantalla
+  delay(1500); // TODO - Es necesario ???
 }
 
 void loop() {
@@ -86,39 +89,39 @@ void loop() {
     // Comprobamos si se pulsa el teclado, por si se pulsa C y la puerta está abierta, intentar cerrarla,
     // o almacenar contraseñas si está cerrada
     checkKeystrokes();
+
+    // Comprobamos si la puerta está cerrada y hay alguien dentro, para entonces abrir la puerta
+    checkIfSomeoneWantsToGoOutside();
   }
   // Si la puerta está abierta desde dentro
   else {
     // Comprobamos si ya no hay nadie dentro, para intentar cerrar la puerta
     checkIfSomeoneHasGoneOutside();
   }
-
-  // Si la puerta está cerrada, y detecta alguien dentro, esta se abre
-  checkIfSomeoneWantsToGoOutside();
 }
 
 
 void checkIfTimeHasPassed() {
   // Si la puerta está abierta y han pasado 5 segundos desde que se abrió
-  if (doorIsOpened && millis() - timeDoorWasOpened >= 5000) {
+  if (doorIsOpenedFromOutside && millis() - timeDoorWasOpened >= 5000) {
     Serial.println("\n> Se acaban los 5 segundos de apertura");
     // Se intenta cerrar la puerta
-    tryToCloseTheDoorWhenUserIsGoingOut(); // el usuario está saliendo
+    tryToCloseTheDoorWhenUserIsEntering(); // el usuario está entrando
   }
 }
 
 void checkIfSomeoneHasEntered() {
   // Si la puerta está abierta y hay alguien dentro
-  if (doorIsOpened && somethingInsideTheDoor() && YYYYYYYY) { /* TODO - añadir aqui la comprobación de que el tiempo entre mediciones ha pasado */
+  if (doorIsOpenedFromOutside && somethingInsideTheDoor()) {
     // Intentamos cerrar la puerta (dentro se comprueba que no hay nada delante)
-    tryToCloseTheDoorWhenUserIsGoingOut(); // el usuario está saliendo
+    tryToCloseTheDoorWhenUserIsEntering(); // el usuario está entrando
   }
 }
 
 // TODO -------------------------------------------------------------
 void checkIfSomeoneWantsToGoOutside() {
   // Si la puerta está cerrada y hay alguien dentro
-  if (!doorIsOpened && somethingInsideTheDoor()) {
+  if (!doorIsOpenedFromOutside && somethingInsideTheDoor()) {
     // Abrimos la puerta desde dentro
     openTheDoorFromInside();
   }
@@ -126,9 +129,13 @@ void checkIfSomeoneWantsToGoOutside() {
 
 void checkIfSomeoneHasGoneOutside() {
   // Si la puerta está abierta y ya no hay nadie dentro
-  if (doorIsOpened && !somethingInsideTheDoor()) {
-    // Intentamos cerrar la puerta (dentro se comprueba que no hay nada delante)
-    tryToCloseTheDoorWhenUserIsGoingOut(); // el usuario está saliendo
+  if (doorIsOpenedFromInside && !somethingInsideTheDoor()) {
+    // Si ha pasado el tiempo mínimo entre mediciones con el sensor de ultrasonidos desde la
+    // última vez que se intentó cerrar la puerta cuando alguien estaba saliendo
+    if (millis() - timeLastTryToCloseTheDoorWhenUserIsGoingOut >= delayBetweenUltrasonicSensorMeasurements) {
+      // Intentamos cerrar la puerta (dentro se comprueba que no hay nada delante)
+      tryToCloseTheDoorWhenUserIsGoingOut(); // el usuario está saliendo
+    }
   }
 }
 // TODO -------------------------------------------------------------
@@ -147,11 +154,11 @@ void userHasPressedAKey(char key) {
   Serial.println("Tecla pulsada: " + String(key));
 
   // Si la puerta está cerrada
-  if (!doorIsOpened) {
+  if (!doorIsOpenedFromOutside) {
     userHasPressedAKeyWhileDoorWasClosed(key);
   }
   // Si la puerta está abierta y se pulsa la tecla C
-  else if (doorIsOpened && key == 'C') {
+  else if (doorIsOpenedFromOutside && key == 'C') {
     Serial.println("\n> Se fuerza al cierre de la puerta");
     // Se intenta cerrar la puerta
     tryToCloseTheDoorWhenUserIsEntering(); // el usuario está entrando
@@ -210,19 +217,21 @@ void openTheDoorFor5Seconds() {
   openTheDoor();
 
   // Se indica que la puerta está abierta y se almacena el momento en el que se abrió
-  doorIsOpened = true;
+  doorIsOpenedFromOutside = true;
   timeDoorWasOpened = millis();
 }
 
-// TODO -------------------------------------------------------------
 void openTheDoorFromInside() {
   Serial.println("\n# Se abre la puerta desde dentro");
   openTheDoor();
 
   // Se indica que la puerta está abierta desde dentro
   doorIsOpenedFromInside = true;
+
+  // Se inicia el valor del tiempo del último intento de cerrar la puerta,
+  // para que así haya un cierto espacio entre las llamadas al sensor de ultrasonidos
+  timeLastTryToCloseTheDoorWhenUserIsGoingOut = millis();
 }
-// TODO -------------------------------------------------------------
 
 void openTheDoor() {
   // Se encienden/apagan los leds correspondientes
@@ -230,13 +239,6 @@ void openTheDoor() {
   digitalWrite(ledDoorOpened, HIGH);
 }
 
-/*
- * hay dos casos distintos para intentar cerrar la puerta. Uno cuando esta entrando, y otro cuando esta saliendo. 
- * En este ultimo, no vale este metodo, pues hay que hacer una espera entre las llamadas al sensor exterior (variable global para ello).
- * Por tanto, no hace falta el param booleano. 
- * tryToCloseTheDoorWhenUserIsEntering()
- * tryToCloseTheDoorWhenUserIsGoindOutside()
- */
 void tryToCloseTheDoorWhenUserIsEntering() {
   //Si hay alguien delante de la puerta, no la podemos cerrar!
   if (somethingInFrontOfTheDoor()) {
@@ -252,37 +254,37 @@ void tryToCloseTheDoorWhenUserIsGoingOut() {
   //Si hay alguien delante de la puerta, no la podemos cerrar!
   if (somethingInFrontOfTheDoor()) {
     Serial.println("# No se puede cerrar la puerta. Alguien está saliendo");
+    
+    // Se toma el tiempo de la última vez que se intentó cerrar la puerta cuando alguien estaba saliendo
+    timeLastTryToCloseTheDoorWhenUserIsGoingOut = millis();
   }
   // Si no hay nadie delante de la puerta, la cerramos
   else closeTheDoorWhenUserIsGoingOut();
-
-  // Se toma el tiempo de la última vez que se intentó cerrar la puerta cuando alguien estaba saliendo
-  timeLastTryToCloseTheDoorWhenUserIsGoingOut = millis(); // TODO
 }
 
 void closeTheDoorWhenUserIsEntering() {
   Serial.println("# Se cierra la puerta después de que alguien ha entrado\n");
-
-  // Se encienden/apagan los leds correspondientes
-  digitalWrite(ledDoorClosed, HIGH);
-  digitalWrite(ledDoorOpened, LOW);
+  closeTheDoor();
 
   // Se indica que la puerta está cerrada
-  doorIsOpened = false;
-  
+  doorIsOpenedFromOutside = false;
+
   // Contabilizamos que acaba de entrar un usuario
   newUserHasEntered();
 }
 
 void closeTheDoorWhenUserIsGoingOut() {
   Serial.println("# Se cierra la puerta después de que alguien ha salido\n");
-
-  // Se encienden/apagan los leds correspondientes
-  digitalWrite(ledDoorClosed, HIGH);
-  digitalWrite(ledDoorOpened, LOW);
+  closeTheDoor();
 
   // Se indica que la puerta está cerrada
   doorIsOpenedFromInside = false;
+}
+
+void closeTheDoor(){
+  // Se encienden/apagan los leds correspondientes
+  digitalWrite(ledDoorClosed, HIGH);
+  digitalWrite(ledDoorOpened, LOW);
 }
 
 void newUserHasEntered() {
