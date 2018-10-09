@@ -118,18 +118,24 @@ void checkIfSomeoneHasEntered() {
   }
 }
 
-// TODO -------------------------------------------------------------
+/*
+   Este método sólo es llamado cuando la puerta no está abierta desde dentro.
+   Por tanto,si la puerta tampoco está abierta desde fuera, es que está cerrada.
+*/
 void checkIfSomeoneWantsToGoOutside() {
-  // Si la puerta está cerrada y hay alguien dentro
+  // Si está cerrada y hay alguien dentro
   if (!doorIsOpenedFromOutside && somethingInsideTheDoor()) {
     // Abrimos la puerta desde dentro
     openTheDoorFromInside();
   }
 }
 
+/*
+   Este método sólo es llamado cuando la puerta está abierta desde dentro.
+*/
 void checkIfSomeoneHasGoneOutside() {
-  // Si la puerta está abierta y ya no hay nadie dentro
-  if (doorIsOpenedFromInside && !somethingInsideTheDoor()) {
+  // Si la puerta está abierta desde dentro y ya no hay nadie dentro
+  if (!somethingInsideTheDoor()) {
     // Si ha pasado el tiempo mínimo entre mediciones con el sensor de ultrasonidos desde la
     // última vez que se intentó cerrar la puerta cuando alguien estaba saliendo
     if (millis() - timeLastTryToCloseTheDoorWhenUserIsGoingOut >= delayBetweenUltrasonicSensorMeasurements) {
@@ -138,7 +144,6 @@ void checkIfSomeoneHasGoneOutside() {
     }
   }
 }
-// TODO -------------------------------------------------------------
 
 void checkKeystrokes() {
   // Obtenemos la tecla pulsada (devuelve '\0' si no se pulsó ninguna)
@@ -150,6 +155,10 @@ void checkKeystrokes() {
   }
 }
 
+/*
+   Este método sólo es llamado cuando la puerta no está abierta desde dentro.
+   Por tanto,si la puerta tampoco está abierta desde fuera, es que está cerrada.
+*/
 void userHasPressedAKey(char key) {
   Serial.println("Tecla pulsada: " + String(key));
 
@@ -254,7 +263,7 @@ void tryToCloseTheDoorWhenUserIsGoingOut() {
   //Si hay alguien delante de la puerta, no la podemos cerrar!
   if (somethingInFrontOfTheDoor()) {
     Serial.println("# No se puede cerrar la puerta. Alguien está saliendo");
-    
+
     // Se toma el tiempo de la última vez que se intentó cerrar la puerta cuando alguien estaba saliendo
     timeLastTryToCloseTheDoorWhenUserIsGoingOut = millis();
   }
@@ -281,7 +290,7 @@ void closeTheDoorWhenUserIsGoingOut() {
   doorIsOpenedFromInside = false;
 }
 
-void closeTheDoor(){
+void closeTheDoor() {
   // Se encienden/apagan los leds correspondientes
   digitalWrite(ledDoorClosed, HIGH);
   digitalWrite(ledDoorOpened, LOW);
