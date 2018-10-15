@@ -27,6 +27,8 @@ double timeDoorWasOpened;
 double timeLastTryToCloseTheDoorWhenUserIsGoingOut;
 // Almacena la contraseña
 String password = "9876";
+// Tiempo de espera hasta que se cierra la puerta sola
+int timeToCloseTheDoor = 5000; // en milisegundos
 
 // Buffer de lectura en el que iremos almacenando todas las teclas que pulsa el usuario
 String readingBuffer = "";
@@ -106,8 +108,8 @@ void loop() {
 
 void checkIfTimeHasPassed() {
   // Si la puerta está abierta y han pasado 5 segundos desde que se abrió
-  if (doorIsOpenedFromOutside && millis() - timeDoorWasOpened >= 5000) {
-    Serial.println("\n> Se acaban los 5 segundos de apertura");
+  if (doorIsOpenedFromOutside && millis() - timeDoorWasOpened >= timeToCloseTheDoor) {
+    Serial.println("\n> Se acaban los " + String(timeToCloseTheDoor / 1000) + " segundos de apertura");
     // Se intenta cerrar la puerta
     tryToCloseTheDoorWhenUserIsEntering(); // el usuario está entrando
   }
@@ -182,10 +184,60 @@ void userHasPressedAKeyWhileDoorWasClosed(char key) {
   readingBuffer = readingBuffer + key;
   Serial.println("Contenido buffer lectura: " + readingBuffer);
 
-  // Si se han introducido 4 teclas
-  if (readingBuffer.length() == 4) {
+  // Si el buffer tiene más de un caracter y el primer elemento del buffer es un *
+  if (readingBuffer.length() > 1 && readingBuffer[0] == '*' && readingBuffer[readingBuffer.length() - 1] == '*') {
+    userHasChangedDoorTime();
+  }
+
+  // Si el primer elemento del buffer no es un * y se han introducido 4 teclas
+  else if (readingBuffer[0] != '*' && readingBuffer.length() == 4) {
     userHasIntroducedAPassword();
   }
+}
+
+void userHasChangedDoorTime() {
+  Serial.println("\nEl usuario ha intentado cambiar el tiempo de la puerta. Cadena introducida: " + readingBuffer);
+
+  String userTime = readingBuffer.substring(1, readingBuffer.length() - 1);
+  Serial.println("Caracteres introducidos entre los *: " + userTime);
+
+  // Se resetea el buffer
+  readingBuffer = "";
+
+  // Validamos que lo que ha introducido entre los * es un número y que no es 0
+  if (!validNumber(userTime)) {
+    return;
+  }
+
+  // Cambiamos el tiempo de cierre de la puerta
+  timeToCloseTheDoor = userTime.toInt() * 1000;
+  Serial.println("Nuevo tiempo de cierre de la puerta (en ms): " + String(timeToCloseTheDoor) + "\n");
+}
+
+boolean validNumber(String userTime) {
+  // Si es un String vacio
+  if(userTime.length() == 0){
+    Serial.println("El tiempo introducido por el usuario NO es válido. Es vacío.");
+    return false;
+  }
+  
+  // Comprobamos que todos los caracteres del String sean numeros
+  for (int i = 0; i < userTime.length(); i++) {
+    if (!isdigit(userTime[i])) {
+      Serial.println("El tiempo introducido por el usuario NO es válido. Incluye carácteres.");
+      return false;
+    }
+  }
+
+  // Aqui se sabe que es un numero. Si es 0 no es válido.
+  if(userTime.toInt() == 0){
+    Serial.println("El tiempo introducido por el usuario NO es válido. Es 0.");
+    return false;
+  }
+  
+  // El numero es distinto de 0. Es valido.
+  Serial.println("El tiempo introducido por el usuario es válido.");
+  return true;
 }
 
 void userHasIntroducedAPassword() {
