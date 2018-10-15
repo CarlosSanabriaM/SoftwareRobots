@@ -42,7 +42,7 @@ const int delayBetweenUltrasonicSensorMeasurements = 2; // tiempo mínimo (en mi
 // medición del sensor de ultrasonidos (recomendable más de 20 microsegundos)
 
 // Variables para el sensor de luz (sensor interior)
-const int lightSensorDetectionValue = 100;
+const int lightSensorDetectionValue = 150;
 
 // Número de usuarios que han entrado por la puerta
 int numUsersHaveEntered = 0;
@@ -74,7 +74,10 @@ void setup() {
   screen.set(BRIGHT_TYPICAL); //BRIGHT_TYPICAL = 2; BRIGHT_DARKEST = 0; BRIGHTEST = 7;
 
   // Esperamos a que se inicie la pantalla
-  delay(1500); // TODO - Es necesario ???
+  delay(1500);
+
+  // Lanzamos una primera medición para ignorar el 0cm
+  getDistanceFromUltrasonicDistanceSensor();
 }
 
 void loop() {
