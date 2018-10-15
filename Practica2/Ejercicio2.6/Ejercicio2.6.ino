@@ -1,9 +1,10 @@
 #include <Keypad.h>
 #include <TM1637.h>
 
-// Pines utilizados para los estados abierto y cerrado de la puerta
-const int ledDoorOpened = 6; // es un led rojo, que cuando está encendido indica puerta abierta/abriéndose
-const int ledDoorClosed = 7; // es un led verde, que cuando está encendido indica puerta cerrada/cerrándose
+// Pines utilizados para los estados de la puerta
+const int ledDoorOpenedFromOutside = 6; // es un led rojo, que cuando está encendido indica puerta abierta desde fuera
+const int ledDoorClosed = 7; // es un led verde, que cuando está encendido indica puerta cerrada
+const int ledDoorOpenedFromInside = 8; // es un led azul, que cuando está encendido indica puerta abriendose desde dentro
 
 // Teclado
 const byte numRows = 4; // numero de filas del teclado
@@ -38,7 +39,7 @@ Keypad _keypad = Keypad(makeKeymap(keys), rowsPins, columnsPins, numRows, numCol
 
 // Variables para el sensor de ultrasonidos (sensor exterior)
 const int pinTrig = 9;
-const int pinEcho = 8;
+const int pinEcho = 10;
 const int distanceSomethingInFrontOfTheDoor = 10; // distancia en cm a partir de la cual se considera que hay algo delante de la puerta
 const int delayBetweenUltrasonicSensorMeasurements = 2; // tiempo mínimo (en milisegundos) que se ha de esperar entre cada
 // medición del sensor de ultrasonidos (recomendable más de 20 microsegundos)
@@ -61,8 +62,9 @@ void setup() {
   Serial.println("\n---------\n  Setup\n---------");
 
   // Salidas de los leds
-  pinMode(ledDoorOpened, OUTPUT);
+  pinMode(ledDoorOpenedFromOutside, OUTPUT);
   pinMode(ledDoorClosed, OUTPUT);
+  pinMode(ledDoorOpenedFromInside, OUTPUT);
 
   // Inicialmente la puerta está cerrada
   digitalWrite(ledDoorClosed, HIGH);
@@ -276,18 +278,28 @@ void userHasIntroducedWrongPassword() {
   blinkGreenLed3Times();
 }
 
+/* Se abre la puerta desde fuera */
 void openTheDoorFor5Seconds() {
   Serial.println("\n# Se abre la puerta");
-  openTheDoor();
+  
+  // Se encienden/apagan los leds correspondientes
+  digitalWrite(ledDoorClosed, LOW);
+  digitalWrite(ledDoorOpenedFromOutside, HIGH);
+  digitalWrite(ledDoorOpenedFromInside, LOW);
 
   // Se indica que la puerta está abierta y se almacena el momento en el que se abrió
   doorIsOpenedFromOutside = true;
   timeDoorWasOpened = millis();
 }
 
+/* Se abre la puerta desde dentro */
 void openTheDoorFromInside() {
   Serial.println("\n# Se abre la puerta desde dentro");
-  openTheDoor();
+
+  // Se encienden/apagan los leds correspondientes
+  digitalWrite(ledDoorClosed, LOW);
+  digitalWrite(ledDoorOpenedFromOutside, LOW);
+  digitalWrite(ledDoorOpenedFromInside, HIGH);
 
   // Se indica que la puerta está abierta desde dentro
   doorIsOpenedFromInside = true;
@@ -295,12 +307,6 @@ void openTheDoorFromInside() {
   // Se inicia el valor del tiempo del último intento de cerrar la puerta,
   // para que así haya un cierto espacio entre las llamadas al sensor de ultrasonidos
   timeLastTryToCloseTheDoorWhenUserIsGoingOut = millis();
-}
-
-void openTheDoor() {
-  // Se encienden/apagan los leds correspondientes
-  digitalWrite(ledDoorClosed, LOW);
-  digitalWrite(ledDoorOpened, HIGH);
 }
 
 void tryToCloseTheDoorWhenUserIsEntering() {
@@ -348,7 +354,8 @@ void closeTheDoorWhenUserIsGoingOut() {
 void closeTheDoor() {
   // Se encienden/apagan los leds correspondientes
   digitalWrite(ledDoorClosed, HIGH);
-  digitalWrite(ledDoorOpened, LOW);
+  digitalWrite(ledDoorOpenedFromOutside, LOW);
+  digitalWrite(ledDoorOpenedFromInside, LOW);
 }
 
 void newUserHasEntered() {
