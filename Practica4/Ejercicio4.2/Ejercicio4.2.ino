@@ -2,33 +2,39 @@
 
 // Variables para el servomotor
 Servo servo;
-int pinServo = 7;
-const int servoFastLeftValue = 0;
-const int servoSlowLeftValue = 80;
-const int servoFastRightValue = 180;
-const int servoSlowRightValue = 100;
-const int servoStopValue = 90;
+int servoPin = 7;
+const int servoFastLeftValue = 0; // velocidad máxima de giro del servomotor en sentido antihorario
+const int servoSlowLeftValue = 80; // velocidad lenta de giro del servomotor en sentido antihorario
+const int servoFastRightValue = 180; // velocidad máxima de giro del servomotor en sentido horario
+const int servoSlowRightValue = 100; // velocidad lenta de giro del servomotor en sentido horario
+const int servoStopValue = 90; // valor en el que el servomotor no gira
+
 
 // Variables para el joystick
-const int boton_pin = 8; // Pin digital para el botón
+const int joystickButtonPin = 8; // pin digital para el botón del joystick
 const int X_pin = A0; // Pin analógico para leer eje X
 const int Y_pin = A1; // Pin analógico para leer eje Y
+
 // La posicion central del joystick es (530, 494)
+
 // Entre 500 y 560 se considera que el joystick está en el centro del eje x
 const int X_low_center_value = 500;
 const int X_high_center_value = 560;
+// Valores en los que cambia la velocidad en el eje X
+const int X_left_speed_change_point_value = 15; // entre 0 y 15 se considera que se quiere mover el actuador a máxima velocidad a la izda
+const int X_right_speed_change_point_value = 1000; // entre 1000 y 1023 se considera que se quiere mover el actuador a máxima velocidad a la dcha
+
 // Entre 465 y 525 se considera que el joystick está en el centro del eje y
 const int Y_low_center_value = 465;
 const int Y_high_center_value = 525;
-// Valores en los que cambia la velocidad en el eje X
-const int X_left_speed_change_point_value = 15;
-const int X_right_speed_change_point_value = 1000;
+
+
 
 void setup() {
   Serial.begin(9600);
   Serial.println("\n---------\n  Setup\n---------");
-  servo.attach(pinServo);
-  pinMode(boton_pin, INPUT_PULLUP); // usamos la resistencia interna del Arduino
+  servo.attach(servoPin);
+  pinMode(joystickButtonPin, INPUT_PULLUP); // usamos la resistencia interna del Arduino
 }
 
 void loop() {
@@ -49,6 +55,7 @@ void loop() {
   }
 }
 
+
 int getJoystickXValue() {
   int XValue = analogRead(X_pin);
   Serial.println("X: " + String(XValue));
@@ -56,7 +63,7 @@ int getJoystickXValue() {
 }
 
 void moveLinealActuatorToTheLeft(int XValue) {
-  if (XValue < X_left_speed_change_point_value) {
+  if (XValue <= X_left_speed_change_point_value) {
     Serial.println("Se mueve el actuador lineal hacia la izquierda: RAPIDO");
     servo.write(servoFastLeftValue);
   }
@@ -67,7 +74,7 @@ void moveLinealActuatorToTheLeft(int XValue) {
 }
 
 void moveLinealActuatorToTheRight(int XValue) {
-  if (XValue > X_right_speed_change_point_value) {
+  if (XValue >= X_right_speed_change_point_value) {
     Serial.println("Se mueve el actuador lineal hacia la derecha: RAPIDO");
     servo.write(servoFastRightValue);
   }
