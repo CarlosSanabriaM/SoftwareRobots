@@ -20,6 +20,7 @@ unsigned long timeBetweenCoordinates; // tiempo (en ms) que tarda en moverse de 
 const int NUM_POSITIONS = 24; // número de coordenadas del recorrido
 int currentCoordinate; // almacena la coordenada actual en la que se encuentra el actuador lineal
 boolean isInCalibrationMode = true;
+const int TIME_DELAY_BETWEEN_MOVEMENTS = 500;
 
 // Variables para las coordenadas harcodeada
 int harcodedCoordinates[5] = {10, 5, 6, 8, 4};
@@ -41,7 +42,7 @@ void loop() {
 
 void moveInCalibrationMode() {
   // Se mueve hacia la dcha
-  if (linealActuatorInCalibrationModeHasToGoToTheRight ) {
+  if (linealActuatorInCalibrationModeHasToGoToTheRight) {
     checkIfHitsRightCollisionSensor();
     moveLinealActuatorToTheRight();
   }
@@ -52,38 +53,42 @@ void moveInCalibrationMode() {
   }
 }
 
+boolean hitsLeftCollisionSensor() {
+  return digitalRead(leftCollisionSensorPin) == collisionSensorActiveValue;
+}
+
 void checkIfHitsLeftCollisionSensor() {
   // Si el actuador choca con el sensor de colisión de la izda, le cambiamos la dirección a la derecha
-  if (digitalRead(leftCollisionSensorPin) == collisionSensorActiveValue) {
+  if (hitsLeftCollisionSensor()) {
+    linealActuatorInCalibrationModeHasToGoToTheRight = true;
+    // Se empieza a contar el tiempo
+    timeLinealActuatorHitsLeftCollisionSensor = millis();
+
     Serial.println("\n# El actuador colisiona con el sensor de colisión de la izquierda."
                    "\n# Se cambia la dirección de movimiento del actuador a la derecha.\n");
-
-    if (isInCalibrationMode) {
-      linealActuatorInCalibrationModeHasToGoToTheRight = true;
-      // Se empieza a contar el tiempo
-      timeLinealActuatorHitsLeftCollisionSensor = millis();
-    }
   }
+}
+
+boolean hitsRightCollisionSensor() {
+  return digitalRead(rightCollisionSensorPin) == collisionSensorActiveValue;
 }
 
 void checkIfHitsRightCollisionSensor() {
   // Si el actuador choca con el sensor de colisión de la dcha, le cambiamos la dirección a la izda
-  if (digitalRead(rightCollisionSensorPin) == collisionSensorActiveValue) {
-    Serial.println("\n# El actuador colisiona con el sensor de colisión de la derecha."
-                   "\n# Se cambia la dirección de movimiento del actuador a la izquierda.\n");
-
+  if (hitsRightCollisionSensor()) {
     linealActuatorInCalibrationModeHasToGoToTheRight = false;
 
-    if (isInCalibrationMode) {
-      // Se calcula el tiempo que se tarda en hacer el recorrido completo, de izda a dcha.
-      unsigned long timeFullTravel = millis() - timeLinealActuatorHitsLeftCollisionSensor;
-      timeBetweenCoordinates = timeFullTravel / NUM_POSITIONS;
-      Serial.println("\n@ Tiempo en ms del recorrido completo: " + String(timeFullTravel));
+    // Se calcula el tiempo que se tarda en hacer el recorrido completo, de izda a dcha.
+    unsigned long timeFullTravel = millis() - timeLinealActuatorHitsLeftCollisionSensor;
+    timeBetweenCoordinates = timeFullTravel / NUM_POSITIONS;
+    Serial.println("\n@ Tiempo en ms del recorrido completo: " + String(timeFullTravel));
 
-      // La coordenada actual en la que queda es la máxima
-      currentCoordinate = NUM_POSITIONS;
-      isInCalibrationMode = false;
-    }
+    // La coordenada actual en la que queda es la máxima
+    currentCoordinate = NUM_POSITIONS;
+    isInCalibrationMode = false;
+
+    Serial.println("\n# El actuador colisiona con el sensor de colisión de la derecha."
+                   "\n# Se cambia la dirección de movimiento del actuador a la izquierda.\n");
   }
 }
 
@@ -96,11 +101,14 @@ void checkIfUserEntersACoordinate() {
   if (coordinate <= 0) {
     // Lo movemos a la coordenada 0 (hasta que llegue al sensor colision izda)
     moveLinealActuatorToTheLeft();
-    // COMPROBAR QUE NO CHOCA CON EL SENSOR IZDA
+    while (!hitsLeftCollisionSensor()) {}
+    stopLinealActuator();
   }
   else if (coordinate >= NUM_POSITIONS) {
+    // Lo movemos a la última coordenada (hasta que llegue al sensor colision dcha)
     moveLinealActuatorToTheRight();
-    // COMPROBAR QUE NO CHOCA CON EL SENSOR IZDA
+    while (!hitsRightCollisionSensor()) {}
+    stopLinealActuator();
   }
   else {
     // Movemos el actuador a la coordenada indicada
@@ -110,11 +118,26 @@ void checkIfUserEntersACoordinate() {
 
 void moveLinealActuatorToCoordinate(int coordinate) {
   // En función de la coordenada donde está, se tendrá que mover a la izda o a la dcha un determinado tiempo
-  currentCoordinate ;
+  int coordinatesToMove = coordinate - currentCoordinate;
 
-  timeFullTravel / NUM_POSITIONS * 3 ms
+  unsigned long timeToMove = abs(coordinatesToMove) * timeBetweenCoordinates;
+  // Si las coordenadas a moverse son negativas, se mueve a la izda
+  if (coordinatesToMove < 0) {
+    moveLinealActuatorToTheLeft();
+    unsigned long timeLinealActuatorStartedToMove = millis();
+    while (millis() - timeLinealActuatorStartedToMove < timeToMove) { }
+    stopLinealActuator();
+  }
+  else if (coordinatesToMove > 0) {
+    moveLinealActuatorToTheRight();
+    unsigned long timeLinealActuatorStartedToMove = millis();
+    while (millis() - timeLinealActuatorStartedToMove < timeToMove) { }
+    stopLinealActuator();
+  }
 
   currentCoordinate = coordinate;
+  // Esperamos medio segundo entre cada movimiento
+  delay(TIME_DELAY_BETWEEN_MOVEMENTS);
 }
 
 void moveLinealActuatorToTheLeft() {
