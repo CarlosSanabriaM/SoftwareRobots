@@ -20,7 +20,9 @@ unsigned long timeFullTravel; // tiempo (en ms) que tarda en moverse el actuador
 const int NUM_POSITIONS = 24; // número de coordenadas del recorrido
 int currentCoordinate; // almacena la coordenada actual en la que se encuentra el actuador lineal
 
+// Variables para las coordenadas harcodeada
 int harcodedCoordinates[5] = {10, 5, 6, 8, 4};
+int harcodedCoordinateToChoose = 0;
 
 
 void setup() {
@@ -28,7 +30,7 @@ void setup() {
   Serial.println("\n---------\n  Setup\n---------");
   servo.attach(servoPin);
   pinMode(joystickButtonPin, INPUT_PULLUP); // usamos la resistencia interna del Arduino
-  
+
   moveInCalibrationMode();
 }
 
@@ -82,17 +84,23 @@ void checkIfHitsRightCollisionSensor() {
 
 void checkIfUserEntersACoordinate() {
   // Obtenemos el valor del la coordenada
-  int coordinate = ?? ?? ?;
+  int coordinate = harcodedCoordinates[harcodedCoordinateToChoose++];
   Serial.println("\n- Coordenada introducida: " + String(coordinate));
 
   // Si el valor de X es menor que el valor límite mínimo de la posicion central es que está hacia la izda
-  if (coordinate < 0)
-    coordinate = 0;
-  else if (coordinate > NUM_POSITIONS)
-    coordinate = NUM_POSITIONS;
-
-  // Movemos el actuador a la coordenada indicada
-  moveLinealActuatorToCoordinate(coordinate);
+  if (coordinate <= 0) {
+    // Lo movemos a la coordenada 0 (hasta que llegue al sensor colision izda)
+    moveLinealActuatorToTheLeft();
+    // COMPROBAR QUE NO CHOCA CON EL SENSOR IZDA
+  }
+  else if (coordinate >= NUM_POSITIONS) {
+    moveLinealActuatorToTheRight();
+    // COMPROBAR QUE NO CHOCA CON EL SENSOR IZDA
+  }
+  else {
+    // Movemos el actuador a la coordenada indicada
+    moveLinealActuatorToCoordinate(coordinate);
+  }
 }
 
 void moveLinealActuatorToCoordinate(int coordinate) {
@@ -100,6 +108,8 @@ void moveLinealActuatorToCoordinate(int coordinate) {
   currentCoordinate;
 
   timeFullTravel / NUM_POSITIONS * 3 ms
+
+  currentCoordinate = coordinate;
 }
 
 void moveLinealActuatorToTheLeft() {
