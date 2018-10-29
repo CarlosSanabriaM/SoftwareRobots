@@ -16,7 +16,7 @@ const int collisionSensorActiveValue = 0; // Valor 1 -> No está activo. Valor 0
 unsigned long timeLinealActuatorHitsLeftCollisionSensor; // instante en el que, en modo calibración, el actuador colisiona con el sensor de la izda.
 unsigned long timeBetweenCoordinates; // tiempo (en ms) que tarda en moverse de una coordenada a la otra.
 const int MAX_COORDINATE = 24; // coordenada máxima
-int currentCoordinate; // coordenada actual en la que se encuentra el actuador lineal
+int currentCoordinate; // coordenad a actual en la que se encuentra el actuador lineal
 String coordinatesString; // String con las coordenadas y los delays introducido por el usuario (c1,d1;c2,d2;c3,d3; ...)
 
 
@@ -34,6 +34,7 @@ void setup() {
 void loop() {
   checkIfUserHasEnteredCoordinates();
 }
+
 
 /*
   Al estar en modo calibración, inicialmente mueve el actuador lineal a la izda del todo,
@@ -173,9 +174,9 @@ void getCoordinateAndDelayFromString(String coordinateAndDelayString, int coordi
 }
 
 /* Mueve el actuador lineal a la coordeanda indicada, y espera el tiempo indicado antes del sgte movimiento. */
-void userHasEnteredACoordinate(int coordinate, int timeDelay) {
+void userHasEnteredACoordinate(int coordinate, int delayTime) {
   Serial.println("\n- Coordenada introducida: " + String(coordinate));
-  Serial.println("\n- Tiempo introducido: " + String(timeDelay));
+  Serial.println("\n- Tiempo introducido: " + String(delayTime));
 
   if (coordinate <= 0) { // coordenadas menores de 0 se convierten a coordenada 0
     coordinate = 0;
@@ -189,7 +190,7 @@ void userHasEnteredACoordinate(int coordinate, int timeDelay) {
     moveLinealActuatorToIntermediateCoordinate(coordinate);
   }
 
-  updateCurrentCoordinateAndDelay(coordinate, timeDelay);
+  updateCurrentCoordinateAndDelay(coordinate, delayTime);
 }
 
 /* Mueve el actuador lineal hacia la izda, hasta que toca el sensor de colisión de la izda. */
@@ -224,11 +225,11 @@ void moveLinealActuatorToIntermediateCoordinate(int coordinate) {
 }
 
 /* Actualiza la coordenada actual donde está el actuador, y espera cierto tiempo entre cada movimiento. */
-void updateCurrentCoordinateAndDelay(int coordinate, int timeDelay) {
+void updateCurrentCoordinateAndDelay(int coordinate, int delayTime) {
   // Actualizamos la coordenada actual en la que está el actuador
   currentCoordinate = coordinate;
   // Esperamos el tiempo indicado entre cada movimiento
-  delay(timeDelay);
+  delay(delayTime);
 }
 
 /* Mueve el actuador lineal a la izquierda. */
