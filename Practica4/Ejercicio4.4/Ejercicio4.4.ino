@@ -16,9 +16,10 @@ unsigned long timeLinealActuatorHitsLeftCollisionSensor; // instante en el que, 
 // Variables para la lógica
 // Si el modo es calibración y esta variable está a false, se tiene que mover a la izda, y si no, a la dcha
 boolean linealActuatorInCalibrationModeHasToGoToTheRight = false;
-unsigned long timeFullTravel; // tiempo (en ms) que tarda en moverse el actuador lineal de la izda a la dcha del todo.
+unsigned long timeBetweenCoordinates; // tiempo (en ms) que tarda en moverse de una coordenada a la otra.
 const int NUM_POSITIONS = 24; // número de coordenadas del recorrido
 int currentCoordinate; // almacena la coordenada actual en la que se encuentra el actuador lineal
+boolean isInCalibrationMode = true;
 
 // Variables para las coordenadas harcodeada
 int harcodedCoordinates[5] = {10, 5, 6, 8, 4};
@@ -29,7 +30,6 @@ void setup() {
   Serial.begin(9600);
   Serial.println("\n---------\n  Setup\n---------");
   servo.attach(servoPin);
-  pinMode(joystickButtonPin, INPUT_PULLUP); // usamos la resistencia interna del Arduino
 
   moveInCalibrationMode();
 }
@@ -58,10 +58,11 @@ void checkIfHitsLeftCollisionSensor() {
     Serial.println("\n# El actuador colisiona con el sensor de colisión de la izquierda."
                    "\n# Se cambia la dirección de movimiento del actuador a la derecha.\n");
 
-    linealActuatorInCalibrationModeHasToGoToTheRight = true;
-
-    // Se empieza a contar el tiempo
-    timeLinealActuatorHitsLeftCollisionSensor = millis();
+    if (isInCalibrationMode) {
+      linealActuatorInCalibrationModeHasToGoToTheRight = true;
+      // Se empieza a contar el tiempo
+      timeLinealActuatorHitsLeftCollisionSensor = millis();
+    }
   }
 }
 
@@ -73,12 +74,16 @@ void checkIfHitsRightCollisionSensor() {
 
     linealActuatorInCalibrationModeHasToGoToTheRight = false;
 
-    // Se calcula el tiempo que se tarda en hacer el recorrido completo, de izda a dcha.
-    timeFullTravel = millis() - timeLinealActuatorHitsLeftCollisionSensor;
-    Serial.println("\n@ Tiempo en ms del recorrido completo: " + String(timeFullTravel));
+    if (isInCalibrationMode) {
+      // Se calcula el tiempo que se tarda en hacer el recorrido completo, de izda a dcha.
+      unsigned long timeFullTravel = millis() - timeLinealActuatorHitsLeftCollisionSensor;
+      timeBetweenCoordinates = timeFullTravel / NUM_POSITIONS;
+      Serial.println("\n@ Tiempo en ms del recorrido completo: " + String(timeFullTravel));
 
-    // La coordenada actual en la que queda es la máxima
-    currentCoordinate = NUM_POSITIONS;
+      // La coordenada actual en la que queda es la máxima
+      currentCoordinate = NUM_POSITIONS;
+      isInCalibrationMode = false;
+    }
   }
 }
 
@@ -105,7 +110,7 @@ void checkIfUserEntersACoordinate() {
 
 void moveLinealActuatorToCoordinate(int coordinate) {
   // En función de la coordenada donde está, se tendrá que mover a la izda o a la dcha un determinado tiempo
-  currentCoordinate;
+  currentCoordinate ;
 
   timeFullTravel / NUM_POSITIONS * 3 ms
 
