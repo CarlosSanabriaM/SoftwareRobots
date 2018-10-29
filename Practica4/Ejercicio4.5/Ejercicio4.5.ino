@@ -18,6 +18,7 @@ unsigned long timeLinealActuatorHitsLeftCollisionSensor; // instante en el que, 
 unsigned long timeBetweenCoordinates; // tiempo (en ms) que tarda en moverse de una coordenada a la otra.
 const int NUM_POSITIONS = 24; // número de coordenadas del recorrido
 int currentCoordinate; // almacena la coordenada actual en la que se encuentra el actuador lineal
+String coordinatesString; // almacena el String con las coordenadas y los delays introducido por el usuario
 
 struct coordinateAndDelay
 {
@@ -32,6 +33,8 @@ CoordinateAndDelay arrayOfCoordinates[10];
 void setup() {
   Serial.begin(9600);
   Serial.println("\n---------\n  Setup\n---------");
+  Serial.setTimeout(5);
+
   servo.attach(servoPin);
 
   moveInCalibrationMode();
@@ -87,21 +90,62 @@ boolean hitsRightCollisionSensor() {
 void checkIfUserEntersCoordinates() {
   // send data only when you receive data:
   if (Serial.available() > 0) {
-    String coordinatesString = Serial.readString();
+    coordinatesString = Serial.readString();
     Serial.print("El usuario ha introucido: " + coordinatesString);
 
-    // Se obtienen las coordenadas del String
-    splitCoordenates();
-
-    // Le pasamos las coordenadas una a una
-    for (int i = 0; i < sizeof(arrayOfCoordinates) / sizeof(CoordinateAndDelay); i++) {
-      userHasEnteredACoordinate(arrayOfCoordinates[i].coordinate, arrayOfCoordinates[i].timeDelay);
+    // Mientras haya coordenadas con delay en el String
+    while (hasCoordenatesAndDelay()) {
+      // Se obtiene el String de el primer grupo (coordenada,delay)
+      String coordinateAndDelayString = getCoordinateAndDelayString();
+      // Se convierte en un objeto CoordinateAndDelay
+      CoordinateAndDelay coordinateAndDelay = getCoordinateAndDelayStructFromCoordinateAndDelayString(coordinateAndDelayString);
+      Serial.println("coordinate: " + coordinateAndDelay.coordinate);
+      Serial.println("timeDelay: " + coordinateAndDelay.timeDelay);
     }
+
   }
 }
 
-void splitCoordenates() {
+boolean hasCoordenatesAndDelay() {
+  return coordinatesString.length() > 0;
+}
 
+String getCoordinateAndDelayString() {
+  return getStringUntilSeparator(';');
+}
+
+String getStringUntilSeparator(char separator) {
+  int i = 0;
+  while (coordinatesString.charAt(i) != separator) {
+    i++;
+  }
+  // Almacenamos el String hasta el ; (sin incluir)
+  String result = coordinatesString.substring(0, i);
+  // Eliminamos los caracteres del String hasta el ; (incluido)
+  coordinatesString.remove(0, i + 1);
+
+  return result;
+}
+
+CoordinateAndDelay getCoordinateAndDelayStructFromCoordinateAndDelayString(String coordinateAndDelayString) {
+  int i = 0;
+  while (coordinateAndDelayString.charAt(i) != ',') {
+    i++;
+  }
+  // Almacenamos el String hasta el , (sin incluir)
+  String coordinateString = coordinateAndDelayString.substring(0, i);
+  // Almacenamos el String desde el sgte char al , hasta el final
+  String delayString = coordinateAndDelayString.substring(i + 1);
+
+  Serial.println("coordinateString: " + coordinateString);
+  Serial.println("delayString: " + delayString);
+
+  // Creamos un struct con esos valores
+  CoordinateAndDelay coordinateAndDelay;
+  coordinateAndDelay.coordinate = coordinateString.toInt();
+  coordinateAndDelay.timeDelay = delayString.toInt();
+
+  return coordinateAndDelay;
 }
 
 void userHasEnteredACoordinate(int coordinate, int timeDelay) {
