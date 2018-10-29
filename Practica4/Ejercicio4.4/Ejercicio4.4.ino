@@ -15,12 +15,11 @@ unsigned long timeLinealActuatorHitsLeftCollisionSensor; // instante en el que, 
 
 // Variables para la lógica
 // Si el modo es calibración y esta variable está a false, se tiene que mover a la izda, y si no, a la dcha
-boolean linealActuatorInCalibrationModeHasToGoToTheRight = false;
+boolean linealActuatorInCalibrationModeHasToGoToTheLeft = true;
 unsigned long timeBetweenCoordinates; // tiempo (en ms) que tarda en moverse de una coordenada a la otra.
 const int NUM_POSITIONS = 24; // número de coordenadas del recorrido
 int currentCoordinate; // almacena la coordenada actual en la que se encuentra el actuador lineal
-boolean isInCalibrationMode = true;
-const int TIME_DELAY_BETWEEN_MOVEMENTS = 500;
+const int TIME_DELAY_BETWEEN_MOVEMENTS = 2000;
 
 // Variables para las coordenadas harcodeada
 int harcodedCoordinates[5] = {10, 5, 6, 8, 4};
@@ -41,42 +40,26 @@ void loop() {
 
 
 void moveInCalibrationMode() {
-  // Se mueve hacia la dcha
-  if (linealActuatorInCalibrationModeHasToGoToTheRight) {
-    checkIfHitsRightCollisionSensor();
-    moveLinealActuatorToTheRight();
-  }
   // Se mueve hacia la izda
-  else {
-    checkIfHitsLeftCollisionSensor();
-    moveLinealActuatorToTheLeft();
-  }
-}
-
-boolean hitsLeftCollisionSensor() {
-  return digitalRead(leftCollisionSensorPin) == collisionSensorActiveValue;
-}
-
-void checkIfHitsLeftCollisionSensor() {
-  // Si el actuador choca con el sensor de colisión de la izda, le cambiamos la dirección a la derecha
-  if (hitsLeftCollisionSensor()) {
-    linealActuatorInCalibrationModeHasToGoToTheRight = true;
+  if (linealActuatorInCalibrationModeHasToGoToTheLeft) {
+    // Mientras no colisione con el sensor de la izda
+    while (!hitsLeftCollisionSensor()) {
+      moveLinealActuatorToTheLeft();
+    }
+    // Aqui ya colisionó con el sensor de la izda
+    linealActuatorInCalibrationModeHasToGoToTheLeft = false;
     // Se empieza a contar el tiempo
     timeLinealActuatorHitsLeftCollisionSensor = millis();
 
     Serial.println("\n# El actuador colisiona con el sensor de colisión de la izquierda."
                    "\n# Se cambia la dirección de movimiento del actuador a la derecha.\n");
   }
-}
-
-boolean hitsRightCollisionSensor() {
-  return digitalRead(rightCollisionSensorPin) == collisionSensorActiveValue;
-}
-
-void checkIfHitsRightCollisionSensor() {
-  // Si el actuador choca con el sensor de colisión de la dcha, le cambiamos la dirección a la izda
-  if (hitsRightCollisionSensor()) {
-    linealActuatorInCalibrationModeHasToGoToTheRight = false;
+  // Se mueve hacia la dcha
+  else {
+    // Mientras no colisione con el sensor de la dcha
+    while (!hitsRightCollisionSensor()) {
+      moveLinealActuatorToTheRight();
+    }
 
     // Se calcula el tiempo que se tarda en hacer el recorrido completo, de izda a dcha.
     unsigned long timeFullTravel = millis() - timeLinealActuatorHitsLeftCollisionSensor;
@@ -85,11 +68,18 @@ void checkIfHitsRightCollisionSensor() {
 
     // La coordenada actual en la que queda es la máxima
     currentCoordinate = NUM_POSITIONS;
-    isInCalibrationMode = false;
 
     Serial.println("\n# El actuador colisiona con el sensor de colisión de la derecha."
                    "\n# Se cambia la dirección de movimiento del actuador a la izquierda.\n");
   }
+}
+
+boolean hitsLeftCollisionSensor() {
+  return digitalRead(leftCollisionSensorPin) == collisionSensorActiveValue;
+}
+
+boolean hitsRightCollisionSensor() {
+  return digitalRead(rightCollisionSensorPin) == collisionSensorActiveValue;
 }
 
 void checkIfUserEntersACoordinate() {
@@ -119,8 +109,8 @@ void checkIfUserEntersACoordinate() {
 void moveLinealActuatorToCoordinate(int coordinate) {
   // En función de la coordenada donde está, se tendrá que mover a la izda o a la dcha un determinado tiempo
   int coordinatesToMove = coordinate - currentCoordinate;
-
   unsigned long timeToMove = abs(coordinatesToMove) * timeBetweenCoordinates;
+  
   // Si las coordenadas a moverse son negativas, se mueve a la izda
   if (coordinatesToMove < 0) {
     moveLinealActuatorToTheLeft();
