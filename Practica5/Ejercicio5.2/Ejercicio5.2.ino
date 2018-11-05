@@ -42,12 +42,13 @@ const int Y_down_speed_change_point_value = 1000; // entre 1000 y 1023 se consid
 
 // Variables para la pinza
 // Grados pinza, MAX y MIN admitido
-#define MAX_CLAMP_DEGREES 110
-#define MIN_CLAMP_DEGREES 10
+const int MAX_CLAMP_DEGREES = 110;
+const int MIN_CLAMP_DEGREES = 10;
 int clampDegrees = MIN_CLAMP_DEGREES; // almacena los grados actuales de la pinza
 // Entre 300 y 700 se considera que el joystick de la pinza está en el centro del eje x
 const int clamp_X_low_center_value = 300;
 const int clamp_X_high_center_value = 700;
+const int CLAMP_DEGREES_CHANGE = 2;
 
 
 void setup() {
@@ -113,11 +114,11 @@ void checkIfHaveToOpenOrCloseTheClamp() {
 
   // Si el valor de X es menor que el valor límite mínimo de la posicion central es que el joystick está hacia la izda
   if (XValue < clamp_X_low_center_value) {
-    closeClamp();
+    openClamp();
   }
   // Si el valor de X es mayor que el valor límite máximo de la posicion central es que el joystick está hacia la dcha
   else if (XValue > clamp_X_high_center_value) {
-    openClamp();
+    closeClamp();
   }
 }
 
@@ -187,27 +188,27 @@ void moveLinealActuatorDown(int YValue) {
 /* Detiene el actuador lineal del eje indicado. */
 void stopLinealActuator(char actuatorAxis) {
   //Serial.println("Se para actuador lineal del eje " + String(actuatorAxis));
-  
+
   if (actuatorAxis == 'X') xAxisServo.write(servoStopValue);
   else yAxisServo.write(servoStopValue);
 }
 
-/* Abre la pinza lentamente (se aumenta un grado al servomotor). */
+/* Abre la pinza lentamente. */
 void openClamp() {
-  // Si los grados actuales de la pinza son menores que el máximo permitido
-  if(clampDegrees < MAX_CLAMP_DEGREES)
-    clampDegrees+=2; // incrementamos en 1 los grados de la pinza
+  // Si los grados actuales de la pinza menos los grados a decrementar son mayores o iguales que el mínimo permitido
+  if (clampDegrees - CLAMP_DEGREES_CHANGE >= MIN_CLAMP_DEGREES)
+    clampDegrees -= CLAMP_DEGREES_CHANGE; // decrementamos los grados de la pinza
 
   Serial.println(F("Se abre la pinza"));
   Serial.println("Grados pinza: " + String(clampDegrees));
   clampServo.write(clampDegrees); // es de 180º. Al girar hasta los grados indicados se detiene.
 }
 
-/* Cierra la pinza lentamente (se aumenta un grado al servomotor). */
+/* Cierra la pinza lentamente. */
 void closeClamp() {
-  // Si los grados actuales de la pinza son mayores que el mínimo permitido
-  if(clampDegrees > MIN_CLAMP_DEGREES)
-    clampDegrees-=2; // decrementamos en 1 los grados de la pinza
+  // Si los grados actuales de la pinza más los grados a incrementar son menores o iguales que el máximo permitido
+  if (clampDegrees + CLAMP_DEGREES_CHANGE <= MAX_CLAMP_DEGREES)
+    clampDegrees += CLAMP_DEGREES_CHANGE; // incrementamos los grados de la pinza
 
   Serial.println(F("Se cierra la pinza"));
   Serial.println("Grados pinza: " + String(clampDegrees));
