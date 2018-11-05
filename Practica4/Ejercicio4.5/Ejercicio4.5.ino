@@ -1,3 +1,9 @@
+/*
+  Coordenadas para probarlo:
+  10,1000;20,1750;15,400;-1,1000;
+  4,300;100,2000;21,400;
+*/
+
 #include <Servo.h>
 
 // Variables para el servomotor
@@ -60,7 +66,7 @@ void moveInCalibrationModeToTheLeft() {
 
 /*
   Mueve el actuador lineal a la dcha del todo (hasta chocar con el sensor de colisión).
-  En ese momento, lo para y mide el tiempo que tardó en moverse desde la izda hasta la dcha, 
+  En ese momento, lo para y mide el tiempo que tardó en moverse desde la izda hasta la dcha,
   y calcula el tiempo que debe de haber entre cada coordenada.
 */
 void moveInCalibrationModeToTheRight() {
@@ -69,12 +75,12 @@ void moveInCalibrationModeToTheRight() {
   stopLinealActuator();
 
   // Se calcula el tiempo del recorrido completo
-  unsigned long timeFullTravel = millis() - timeLinealActuatorHitsLeftCollisionSensor; 
+  unsigned long timeFullTravel = millis() - timeLinealActuatorHitsLeftCollisionSensor;
   Serial.println("\n# El actuador colisiona con el sensor de colisión de la izquierda."
                  "\n# Se para el actuador y se calcula el tiempo del recorrido y el tiempo entre coordenadas.\n");
 
   // Se calcula el tiempo entre coordenadas
-  timeBetweenCoordinates = timeFullTravel / MAX_COORDINATE; 
+  timeBetweenCoordinates = timeFullTravel / MAX_COORDINATE;
   Serial.println("\n@ Tiempo en ms del recorrido completo: " + String(timeFullTravel));
   Serial.println("\n@ Tiempo en ms entre coordenadas: " + String(timeBetweenCoordinates));
 
@@ -106,7 +112,7 @@ void checkIfUserHasEnteredCoordinates() {
 */
 void userHasEnteredCoordinates() {
   // Se lee esa información y se almacena en la variable global
-  coordinatesString = Serial.readString();
+  coordinatesString = Serial.readStringUntil('\n');
   Serial.print("$ El usuario ha introducido: " + coordinatesString);
 
   // Mientras haya coordenadas en el String
@@ -120,7 +126,10 @@ void userHasEnteredCoordinates() {
 
     // Se pasa la coordenada y el delay al método que efectua el movimiento
     userHasEnteredACoordinate(coordinateAndDelay[0], coordinateAndDelay[1]);
+    Serial.println("Ya termino una coordenada");
+    Serial.println("Tam string: " + String(coordinatesString.length()));
   }
+  Serial.println("Ya terminaron las coordenados");
 }
 
 /*
