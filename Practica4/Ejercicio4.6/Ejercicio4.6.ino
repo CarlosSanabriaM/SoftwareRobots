@@ -1,3 +1,9 @@
+/*
+  Coordenadas para probarlo:
+  24,1000;74,1000;72,1000;71,1000;70,1000;69,500;
+  -1,1000;10,1000;11,1500;12,1000;14,750;16,750;20,750;
+*/
+
 #include <Servo.h>
 
 // Variables para el servomotor
@@ -15,7 +21,7 @@ const int collisionSensorActiveValue = 0; // Valor 1 -> No está activo. Valor 0
 // Variables para la lógica
 unsigned long timeLinealActuatorHitsLeftCollisionSensor; // instante en el que, en modo calibración, el actuador colisiona con el sensor de la izda.
 unsigned long timeBetweenCoordinates; // tiempo (en ms) que tarda en moverse de una coordenada a la otra.
-const int MAX_COORDINATE = 240; // coordenada máxima
+const int MAX_COORDINATE = 72; // coordenada máxima
 int currentCoordinate; // coordenad a actual en la que se encuentra el actuador lineal
 String coordinatesString; // String con las coordenadas y los delays introducido por el usuario (c1,d1;c2,d2;c3,d3; ...)
 
@@ -60,7 +66,7 @@ void moveInCalibrationModeToTheLeft() {
 
 /*
   Mueve el actuador lineal a la dcha del todo (hasta chocar con el sensor de colisión).
-  En ese momento, lo para y mide el tiempo que tardó en moverse desde la izda hasta la dcha, 
+  En ese momento, lo para y mide el tiempo que tardó en moverse desde la izda hasta la dcha,
   y calcula el tiempo que debe de haber entre cada coordenada.
 */
 void moveInCalibrationModeToTheRight() {
@@ -69,12 +75,12 @@ void moveInCalibrationModeToTheRight() {
   stopLinealActuator();
 
   // Se calcula el tiempo del recorrido completo
-  unsigned long timeFullTravel = millis() - timeLinealActuatorHitsLeftCollisionSensor; 
+  unsigned long timeFullTravel = millis() - timeLinealActuatorHitsLeftCollisionSensor;
   Serial.println("\n# El actuador colisiona con el sensor de colisión de la izquierda."
                  "\n# Se para el actuador y se calcula el tiempo del recorrido y el tiempo entre coordenadas.\n");
 
   // Se calcula el tiempo entre coordenadas
-  timeBetweenCoordinates = timeFullTravel / MAX_COORDINATE; 
+  timeBetweenCoordinates = timeFullTravel / MAX_COORDINATE;
   Serial.println("\n@ Tiempo en ms del recorrido completo: " + String(timeFullTravel));
   Serial.println("\n@ Tiempo en ms entre coordenadas: " + String(timeBetweenCoordinates));
 
@@ -106,7 +112,7 @@ void checkIfUserHasEnteredCoordinates() {
 */
 void userHasEnteredCoordinates() {
   // Se lee esa información y se almacena en la variable global
-  coordinatesString = Serial.readString();
+  coordinatesString = Serial.readStringUntil('\n');
   Serial.print("$ El usuario ha introducido: " + coordinatesString);
 
   // Mientras haya coordenadas en el String
