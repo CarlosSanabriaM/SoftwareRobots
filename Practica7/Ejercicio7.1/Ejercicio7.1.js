@@ -7,7 +7,7 @@ class MapaSensores{
         
         this.latitudArduino = 43.3545734; // latitud del arduino, harcodeada
         this.longitudArduino = -5.8511042; // longitud del arduino, harcodeada
-        this.IPArduino = "192.168.61.37"; // ip del Arduino
+        this.IPArduino = "192.168.61.37"; // IP del Arduino
     }
     
     // Crea el mapa de Google y añade los marcadores correspondientes a los sensores
@@ -17,9 +17,6 @@ class MapaSensores{
           center: {lat: this.latitudArduino, lng: this.longitudArduino},
           zoom: 15
         });
-        
-        console.log(this);
-        console.log("MENSAJE");
 
         // Añadimos los marcadores correspondientes a los sensores.
         // Solo uno de ellos será un Arduino de verdad. El resto tienen valores fijos, que no cambian.
@@ -30,18 +27,7 @@ class MapaSensores{
         // Añadimos el resto de marcadores con "sensores falsos"
         this.addMarcadorConInfoWindow("Facultad de Magisterio", 43.357738, -5.855048, 20, 32);
         this.addMarcadorConInfoWindow("Facultad de Ciencias ", 43.357936, -5.853565, 21, 30);
-            
-        //this.activarMarcadores(mapa); // TODO - quitar??
-        //this.mapa.setCenter(this.posicionActual); // TODO - quitar
-        //this.marcadorPosicionActual.setTitle("Tu posición"); // TODO - qutar
     }
-    
-    /*//Activa todos los marcadores. // TODO - quitar
-    activarMarcadores(mapa) {
-        for (var i = 0; i < this.marcadores.length; i++) {
-            this.marcadores[i].setMap(mapa);
-        }
-    }*/
 
     // Consulta al Arduino la temperatura y la humedad utilizando Ajax con JQuery,
     // y si tiene éxito, actualiza la temperatura y humedad en la web
@@ -103,14 +89,12 @@ class MapaSensores{
         var infowindow = new google.maps.InfoWindow({
           content: contentString
         });
-
-        //marcador.setTitle(lugar); // TODO - quitar??
         
         // Añadimos un escuchador del evento click para cuando se pulse ese marcador
         marcador.addListener('click', this.clickInfoWindowHandler.bind(this,marcador,infowindow));
     }
     
-    // Cuando se hace click en un marcador, se hable su infoWindow correspondiente
+    // Cuando se hace click en un marcador, se abre su infoWindow correspondiente
     clickInfoWindowHandler(marcador,infowindow){
         infowindow.open(this.mapa, marcador);
     }
