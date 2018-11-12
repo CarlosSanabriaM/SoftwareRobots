@@ -1,0 +1,4 @@
+- Fichero Main scad con las piezas stl unidas.
+- Captura de la pieza Main.
+- Fichero Main stl.
+- Fichero scad de cada pieza.
