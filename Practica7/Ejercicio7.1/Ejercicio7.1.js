@@ -3,6 +3,12 @@ class MapaSensores {
     constructor() {
         this.mapa; // el mapa de Google Maps
         this.sensores = []; // array para almacenar los sensores
+        
+        this.TIME_BETWEEN_SENSOR_MEASUREMENT = 7000; // tiempo entre cada medición a los sensores
+        this.RANDOM_TEMPERATURE_MIN_VALUE = 17; // tiempo mínimo para la temperatura aleatoria de los sensores falsos
+        this.RANDOM_TEMPERATURE_MAX_VALUE = 26; // tiempo mínimo para la temperatura aleatoria de los sensores falsos
+        this.RANDOM_HUMIDITY_MIN_VALUE = 20; // tiempo mínimo para la temperatura aleatoria de los sensores falsos
+        this.RANDOM_HUMIDITY_MAX_VALUE = 30; // tiempo mínimo para la temperatura aleatoria de los sensores falsos
     }
 
     // Crea el mapa de Google y los sensores (con su marcador en el mapa)
@@ -33,6 +39,9 @@ class MapaSensores {
         for (var i = 0; i < this.sensores.length; i++) {
             this.setMarcadorConInfoWindow(this.sensores[i]);
         }
+        
+        // Cada TIME_BETWEEN_SENSOR_MEASUREMENT milisegundos obtenemos los datos de los sensores
+        setInterval(this.consultarSensores.bind(this), this.TIME_BETWEEN_SENSOR_MEASUREMENT);
     }
     
     // Establece el marcador con infowindow para el sensor
@@ -79,13 +88,27 @@ class MapaSensores {
         infowindow.open(this.mapa, marcador);
     }
     
+    // Para cada uno de los sensores, consulta y actualiza la temperatura y la humedad
+    consultarSensores(){
+        console.log('Se consulta la información de los sensores');
+        
+        for (var i = 0; i < this.sensores.length; i++) {
+            this.actualizarTemperaturaYHumedad(this.sensores[i]);
+        }
+    }
+    
+    // Obtiene la temperatura y la humedad del sensor, si es real,
+    // o la genera aleatoriamente, si es falso.
+    actualizarTemperaturaYHumedad(sensor) {
+        if(sensor.isReal)
+            this.actualizarTemperaturaYHumedadSensorReal(sensor);
+        else
+            this.actualizarTemperaturaYHumedadSensorFalso(sensor);
+    }
+    
     // Consulta al sensor indicado la temperatura y la humedad utilizando Ajax con JQuery,
     // y si tiene éxito, actualiza la temperatura y humedad en la web
-    actualizarTemperaturaYHumedad(sensor) {
-        // Si el sensor es falso, no se hace nada
-        if(!sensor.isReal)
-            return;
-        
+    actualizarTemperaturaYHumedadSensorReal(sensor){
         // Se realiza una petición al sensor, pidiendole la temperatura y la humedad
         var urlSensor = 'http://' + sensor.IP + '/temperaturayhumedad';
 
@@ -95,13 +118,32 @@ class MapaSensores {
             method: 'GET',
             success: function(data){
                 // Si tiene exito, se actualiza el infowindow correspondiente a ese sensor
-                $('#temperatura' + sensor.IP).html(data.temperatura);
-                $('#humedad' + sensor.IP).html(data.humedad);
+                $('#temperatura' + sensor.IP).html(data.temperatura); // TODO - .toString()
+                $('#humedad' + sensor.IP).html(data.humedad); // TODO - .toString()
             },
             error: function () {
                 $('#mensajeError' + sensor.IP).html('¡En este momento no se puede obtener la información de la temperatura y la humedad!');
             }
         });
+    }
+    
+    actualizarTemperaturaYHumedadSensorFalso(sensor){
+        var temperaturaAleatoria = this.randomIntFromInterval(this.RANDOM_TEMPERATURE_MIN_VALUE, 
+                                                         this.RANDOM_TEMPERATURE_MAX_VALUE);
+        var humedadAleatoria = this.randomIntFromInterval(this.RANDOM_HUMIDITY_MIN_VALUE, 
+                                                     this.RANDOM_HUMIDITY_MAX_VALUE);
+        console.log('Valores aleatorios para el sensor ' + sensor.nombre + 
+                    ": Temperatura: " + temperaturaAleatoria + 
+                    ": Humedad: " + humedadAleatoria);
+        
+        // Se actualiza el infowindow correspondiente a ese sensor
+        $('#temperatura' + sensor.IP).html(temperaturaAleatoria.toString());
+        $('#humedad' + sensor.IP).html(humedadAleatoria.toString());
+    }
+    
+    // Genera un número aleatorio en el rango [min,max] (ambos inclusive)
+    randomIntFromInterval(min, max){
+        return Math.floor(Math.random() * (max - min + 1) + min);
     }
 }
 
