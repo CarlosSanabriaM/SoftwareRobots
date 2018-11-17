@@ -150,6 +150,10 @@ class MapaSensores {
     }
     
     mostrarInformaciónSensor(sensor){
+        // Si aún no ha cargado el id dinámico del infowindow, no hacemos nada
+        if(document.getElementById('temperatura' + sensor.IP) == null)
+            return;
+        
         // Se actualiza el infowindow correspondiente a ese sensor
         document.getElementById('temperatura' + sensor.IP).innerHTML = sensor.temperatura.toString();
         document.getElementById('humedad' + sensor.IP).innerHTML = sensor.humedad.toString();
