@@ -3,7 +3,6 @@ class MapaSensores {
     constructor() {
         this.mapa; // el mapa de Google Maps
         this.sensores = []; // array para almacenar los sensores
-        //this.marcadores = []; //Array para guardar los marcadores // TODO - quitar
     }
 
     // Crea el mapa de Google y los sensores (con su marcador en el mapa)
@@ -15,6 +14,12 @@ class MapaSensores {
         var sensorFalso2 = new Sensor('192.168.61.101', 'Facultad de Ciencias', 43.357936, -5.853565, false, 22, 30); 
         var sensorFalso3 = new Sensor('192.168.61.102', 'Palacio de Congresos Príncipe Felipe', 43.357514, -5.851170, false, 25, 40);
         
+        // Metemos todos los sensores en el array de sensores
+        this.sensores.push(sensorReal);
+        this.sensores.push(sensorFalso1);
+        this.sensores.push(sensorFalso2);
+        this.sensores.push(sensorFalso3);
+        
         // Inicializamos el mapa de Google
         this.mapa = new google.maps.Map(document.getElementById('mapa-canvas'), {
             center: {
@@ -23,26 +28,14 @@ class MapaSensores {
             },
             zoom: 15
         });
-        
-        // Metemos todos los sensores en el array de sensors
-        this.sensores.push(sensorReal);
-        this.sensores.push(sensorFalso1);
-        this.sensores.push(sensorFalso2);
-        this.sensores.push(sensorFalso3);
 
-        // Añadimos el marcador con ventanita para cada uno de los sensores
+        // Añadimos el marcador con infowindow para cada uno de los sensores
         for (var i = 0; i < this.sensores.length; i++) {
             this.setMarcadorConInfoWindow(this.sensores[i]);
         }
-        
-        // TODO - quitar
-        //this.addMarcadorConInfoWindow('Escuela Ingeniería Informatica', this.latitudArduino, this.longitudArduino, 0, 0);
-        // Añadimos el resto de marcadores con 'sensores falsos'
-        //this.addMarcadorConInfoWindow('Facultad de Magisterio', 43.357738, -5.855048, 20, 32);
-        //this.addMarcadorConInfoWindow('Facultad de Ciencias ', 43.357936, -5.853565, 21, 30);
     }
     
-    // Establece el marcador con ventanita para el sensor
+    // Establece el marcador con infowindow para el sensor
     setMarcadorConInfoWindow(sensor){
         // Creamos el marcador
         var marcador = new google.maps.Marker({
@@ -51,7 +44,7 @@ class MapaSensores {
             title: sensor.nombre
         });
         
-        // Le añadimos la ventanita
+        // Le añadimos la infowindow
         marcador = this.addInfoWindow(marcador, sensor);
         
         // Al sensor se le asocia su marcador
@@ -61,17 +54,14 @@ class MapaSensores {
     // Añade un infowindow al marcador indicado, y con la información del sensor
     addInfoWindow(marcador, sensor) {
         //Creamos una infoWindow con esta estructura html
-        var contentString = '<div id="mensajeError"></div>' +
+        var contentString = 
+            '<div id="mensajeError'+ sensor.IP +'"></div>' +
             '<div>' +
-            '<div>' +
-            '<h2>' + sensor.nombre + '</h2>' +
-            '</div>' +
-            '<div id="datos">' +
-            '<p>Latitud: ' + sensor.latitud + '</p>' +
-            '<p>Longitud: ' + sensor.longitud + '</p>' +
-            '<p>Temperatura:<span id="temperatura">' + sensor.temperatura + '</span></p>' +
-            '<p>Humedad:<span id="humedad">' + sensor.humedad + '</span></p>' +
-            '</div>' +
+                '<h2>' + sensor.nombre + '</h2>' +
+                '<p>Latitud: ' + sensor.latitud + '</p>' +
+                '<p>Longitud: ' + sensor.longitud + '</p>' +
+                '<p>Temperatura:<span id="temperatura'+ sensor.IP +'">' + sensor.temperatura + '</span></p>' +
+                '<p>Humedad:<span id="humedad'+ sensor.IP +'">' + sensor.humedad + '</span></p>' +
             '</div>';
 
         var infowindow = new google.maps.InfoWindow({
@@ -113,55 +103,6 @@ class MapaSensores {
             }
         });
     }
-
-    
-    /*
-    // Crea un marcador con las coordenadas indicadas y le añade un infowindow con la información indicada
-    addMarcadorConInfoWindow(lugar, latitud, longitud, temperatura, humedad) {
-        var marcador = this.addMarcador(latitud, longitud, lugar);
-        this.addInfoWindow(marcador, lugar, latitud, longitud, temperatura, humedad);
-    }
-    */
-
-    // Crea un marcador con las coordenadas indicadas, le pone el title indicado en lugar,
-    // lo añade al mapa, y lo almacena en el array de marcadores
-    /*
-    addMarcador(latitud, longitud, lugar) {
-        var marcador = new google.maps.Marker({
-            position: new google.maps.LatLng(latitud, longitud),
-            map: this.mapa,
-            title: lugar
-        });
-        this.marcadores.push(marcador);
-
-        return marcador;
-    }*/
-
-    // Añade un infowindow al marcador indicado, y con la información indicada
-    /*
-    addInfoWindow(marcador, lugar, latitud, longitud, temperatura, humedad) {
-        //Creamos una infoWindow con esta estructura html
-        var contentString = '<div id="mensajeError"></div>' +
-            '<div>' +
-            '<div>' +
-            '<h2>' + lugar + '</h2>' +
-            '</div>' +
-            '<div id="datos">' +
-            '<p>Latitud: ' + latitud + '</p>' +
-            '<p>Longitud: ' + longitud + '</p>' +
-            '<p>Temperatura:<span id="temperatura">' + temperatura + '</span></p>' +
-            '<p>Humedad:<span id="humedad">' + humedad + '</span></p>' +
-            '</div>' +
-            '</div>';
-
-        var infowindow = new google.maps.InfoWindow({
-            content: contentString
-        });
-
-        // Añadimos un escuchador del evento click para cuando se pulse ese marcador
-        marcador.addListener('click', this.clickInfoWindowHandler.bind(this, marcador, infowindow));
-    }*/
-
 }
 
 "use strict";
