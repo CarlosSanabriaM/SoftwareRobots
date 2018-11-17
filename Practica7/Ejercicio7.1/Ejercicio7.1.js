@@ -17,7 +17,7 @@ class MapaSensores {
     inicializar() {
         // Creamos los sensores. Solo uno de ellos será de verdad. El resto tienen valores fijos, que no cambian.
         var sensorReal   = new Sensor('192.168.61.37', 'Escuela de Ingeniería Informática', 43.3545734, -5.8511042, true, 0, 0);
-        var sensorFalso1 = new Sensor('192.168.61.100', 'Facultad de Formación del Profesorado y Educación', 43.357738, -5.855048, false, 20, 32); 
+        var sensorFalso1 = new Sensor('192.168.61.100', 'Facultad de Profesorado y Educación', 43.357738, -5.855048, false, 20, 32); 
         var sensorFalso2 = new Sensor('192.168.61.101', 'Facultad de Ciencias', 43.357936, -5.853565, false, 22, 30); 
         var sensorFalso3 = new Sensor('192.168.61.102', 'Palacio de Congresos Príncipe Felipe', 43.357514, -5.851170, false, 25, 31);
         
@@ -65,13 +65,17 @@ class MapaSensores {
     addInfoWindow(marcador, sensor) {
         //Creamos una infoWindow con esta estructura html
         var contentString = 
-            '<div id="mensajeError'+ sensor.IP +'"></div>' +
-            '<div>' +
-                '<h2>' + sensor.nombre + '</h2>' +
-                '<p>Latitud: ' + sensor.latitud + '</p>' +
-                '<p>Longitud: ' + sensor.longitud + '</p>' +
-                '<p>Temperatura:<span id="temperatura'+ sensor.IP +'">' + sensor.temperatura + '</span></p>' +
-                '<p>Humedad:<span id="humedad'+ sensor.IP +'">' + sensor.humedad + '</span></p>' +
+            '<div class="infoWindowContent">' + 
+                '<div id="mensajeError'+ sensor.IP +'"></div>' +
+                '<div>' +
+                    '<h2>' + sensor.nombre + '</h2>' +
+                    '<p>Latitud: ' + sensor.latitud + '</p>' +
+                    '<p>Longitud: ' + sensor.longitud + '</p>' +
+                    '<p>Temperatura: <span id="temperatura'+ sensor.IP +'">' + sensor.temperatura + '</span></p>' +
+                    '<p>Humedad: <span id="humedad'+ sensor.IP +'">' + sensor.humedad + '</span></p>' +
+                    '<input type="button" class="button button-green" id="botonEncender'+ sensor.IP +'" value="Encender" />' +
+                    '<input type="button" class="button button-red" id="botonApagar'+ sensor.IP +'" value="Apagar" />' +
+                '</div>' +
             '</div>';
 
         var infowindow = new google.maps.InfoWindow({

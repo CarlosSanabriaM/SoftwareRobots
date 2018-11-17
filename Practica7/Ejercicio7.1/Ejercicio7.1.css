@@ -22,3 +22,43 @@ html, body, #mapa-canvas {
 h2{
     margin-bottom: 1%;
 }
+
+.infoWindowContent{
+    font-size: 120%;
+}
+
+.button {
+    border: none;
+    color: white;
+    padding: 8px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 100%;
+    margin: 1% 1% 4% 0%;
+    cursor: pointer;
+    outline: none;
+    border-radius: 15px;
+    box-shadow: 0 9px #999;
+}
+
+.button:active {
+    box-shadow: 0 5px #666;
+    transform: translateY(4px);
+}
+
+.button-green{
+    background-color: #4CAF50;
+}
+
+.button-green:hover, .button-green:active {
+    background-color: #3e8e41
+}
+
+.button-red{
+    background-color: #AF4C50;
+}
+
+.button-red:hover, .button-red:active {
+    background-color: #8E3E41;
+}
