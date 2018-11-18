@@ -190,6 +190,7 @@ class Sensor {
         var urlSensor = 'http://' + this.IP + '/temperaturayhumedad';
 
         $.ajax({
+            context: this,
             dataType: 'json',
             url: urlSensor,
             method: 'GET',
@@ -251,12 +252,44 @@ class Sensor {
     encenderLed(){
         console.log("Se va a intentar encender la luz del sensor: ");
         console.log(this);
+        
+        // Se realiza una petición al sensor, pidiendole que encienda el led
+        var urlSensor = 'http://' + this.IP + '/led/encender';
+
+        $.ajax({
+            context: this,
+            dataType: 'json',
+            url: urlSensor,
+            method: 'GET',
+            success: function () {
+                console.log("Encendida correctamente la luz led del sensor " + this.nombre);
+            },
+            error: function () {
+                console.log("No se pudo encender la luz led del sensor " + this.nombre);
+            }
+        });
     }
     
     // Apagar el led del sensor, mandando una petición utilizando Ajax con JQuery.
     apagarLed(){
         console.log("Se va a intentar apagar la luz del sensor: ");
         console.log(this);
+        
+        // Se realiza una petición al sensor, pidiendole que apague el led
+        var urlSensor = 'http://' + this.IP + '/led/apagar';
+
+        $.ajax({
+            context: this,
+            dataType: 'json',
+            url: urlSensor,
+            method: 'GET',
+            success: function () {
+                console.log("Apagada correctamente la luz led del sensor " + this.nombre);
+            },
+            error: function () {
+                console.log("No se pudo apagar la luz led del sensor " + this.nombre);
+            }
+        });
     }
     
     // Genera un número aleatorio en el rango [min,max] (ambos inclusive)
