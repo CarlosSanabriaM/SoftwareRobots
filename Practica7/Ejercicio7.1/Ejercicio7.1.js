@@ -73,8 +73,10 @@ class MapaSensores {
                     '<p>Longitud: ' + sensor.longitud + '</p>' +
                     '<p>Temperatura: <span id="temperatura'+ sensor.IP +'">' + sensor.temperatura + '</span></p>' +
                     '<p>Humedad: <span id="humedad'+ sensor.IP +'">' + sensor.humedad + '</span></p>' +
-                    '<input type="button" class="button button-green" id="botonEncender'+ sensor.IP +'" value="Encender" />' +
-                    '<input type="button" class="button button-red" id="botonApagar'+ sensor.IP +'" value="Apagar" />' +
+                    '<input type="button" id="botonEncender'+ sensor.IP +'" class="button button-green" ' +
+                        'onclick="mapa.encenderLed(\''+ sensor.IP +'\');" value="Encender" />' +
+                    '<input type="button" id="botonApagar'+ sensor.IP +'" class="button button-red" ' + 
+                        'onclick="mapa.apagarLed(\''+ sensor.IP +'\');" value="Apagar" />' +
                 '</div>' +
             '</div>';
 
@@ -216,6 +218,18 @@ class MapaSensores {
         $('#mensajeEstadoSensores').css("background-color", "#86FF94");
     }
     
+    
+    // Le dice al sensor con la IP dada que encienda su led
+    encenderLed(sensorIP) {
+        // Buscamos en el array la referencia al led con esa IP
+        for (var i = 0; i < this.sensores.length; i++) {
+            if (this.sensores[i].IP == sensorIP) {
+                this.sensores[i].encenderLed();
+                break;
+            }
+        }
+    }
+    
 }
 
 "use strict";
@@ -231,6 +245,18 @@ class Sensor {
         this.mensajeError; // almacena un mensaje de error al consultar la información del sensor
         
         this.marcador; // almacena el marcador de Google para ese sensor
+    }
+    
+    // Enciende el led del sensor, mandando una petición utilizando Ajax con JQuery.
+    encenderLed(){
+        console.log("Se va a intentar encender la luz del sensor: ");
+        console.log(this);
+    }
+    
+    // Apagar el led del sensor, mandando una petición utilizando Ajax con JQuery.
+    encenderLed(){
+        console.log("Se va a intentar apagar la luz del sensor: ");
+        console.log(this);
     }
 }
 
