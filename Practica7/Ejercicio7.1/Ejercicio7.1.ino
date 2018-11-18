@@ -61,26 +61,33 @@ void loop() {
 /* La petición ha acabado, por lo que comprobamos su contenido y actuamos en consecuencia. */
 void petitionHasFinished(EthernetClient client, String petition) {
   if (contains(petition, TEMPERATURE_AND_HUMIDITY_ENDPOINT)) {
-    sendClientTemperatureAndHumidity(client); // TODO
+    // Primero enviamos la cabecera de la respuesta HTTP y luego los datos en JSON.
+    sendClient_HTTP_OK_Response(client);
+    sendClientTemperatureAndHumidity(client);
   }
   else if(contains(petition, SWITCH_ON_LED_ENDPOINT)){
     switchOnLed();
+    sendClient_HTTP_OK_Response(client);
   }
   else if (contains(petition, SWITCH_OFF_LED_ENDPOINT)) {
     switchOffLed();
+    sendClient_HTTP_OK_Response(client);
   }
-
-  sendClientHTTPResponse(client);
 }
 
+/* Envia al cliente los datos de temperatura y humedad. */
 void sendClientTemperatureAndHumidity(EthernetClient client){
-  
+  client.println("{\"temperatura\":" + String(temperature) + ", \"humedad\":" + String(humidity) + "}"); // TODO - temperature y humidity como vars globales
+  client.println();
 }
 
-void sendClientHTTPResponse(EthernetClient client){
-  // Enviamos al cliente una respuesta HTTP
+/* Envia al cliente una respuesta HTTP 200 OK. */
+void sendClient_HTTP_OK_Response(EthernetClient client){
+  // Enviamos al cliente una respuesta HTTP 200 OK
   client.println("HTTP/1.1 200 OK");
-  client.println("Content-Type: text/html");
+  // client.println("Content-Type: text/html"); // TODO
+  client.println("Content-Type: application/json;charset=utf-8");
+  client.println("Server: Arduino");
   client.println("Access-Control-Allow-Origin: *");
   client.println();
 }
