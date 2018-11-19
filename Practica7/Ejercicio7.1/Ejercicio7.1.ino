@@ -135,12 +135,14 @@ void sendClient_HTTP_500_Error_Response(EthernetClient client) {
 
 /* Enciende el led. */
 void switchOnLed() {
+  Serial.println(F("--------------------------------"));
   Serial.println(F("Se enciende el led"));
   digitalWrite(redLedPin, HIGH);
 }
 
 /* Apaga el led. */
 void switchOffLed() {
+  Serial.println(F("--------------------------------"));
   Serial.println(F("Se apaga el led"));
   digitalWrite(redLedPin, LOW);
 }

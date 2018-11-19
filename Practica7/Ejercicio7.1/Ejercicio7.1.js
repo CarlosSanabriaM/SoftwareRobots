@@ -4,7 +4,7 @@ class MapaSensores {
         this.mapa; // el mapa de Google Maps
         this.sensores = []; // array para almacenar los sensores
         
-        this.TIME_BETWEEN_SENSOR_MEASUREMENT = 7000; // tiempo entre cada medición a los sensores
+        this.TIME_BETWEEN_SENSOR_MEASUREMENT = 3000; // tiempo entre cada medición a los sensores
         this.MAX_CORRECT_HUMIDITY = 36; // si algún sensor tiene esta humedad+1 se muestra una advertencia
     }
 
@@ -82,6 +82,10 @@ class MapaSensores {
         // Añadimos un escuchador del evento click para cuando se pulse ese marcador
         marcador.addListener('click', this.clickInfoWindowHandler.bind(this, marcador, infowindow, sensor));
         
+        // Abrimos y cerramos el infowindow para que se creee sus id.
+        infowindow.open(this.mapa, marcador);
+        infowindow.close();
+        
         return marcador;
     }
     
@@ -118,7 +122,7 @@ class MapaSensores {
     // El sensor pasado como parámetro tiene un estado peligroso, 
     // por lo que se actualiza el mensaje en función de ello.
     sensorConEstadoPeligroso(sensor){
-        var mensaje = '¡Aviso! Humedad más alta de ' + sensor.humedad +
+        var mensaje = '¡Aviso! Humedad más alta de ' + this.MAX_CORRECT_HUMIDITY +
             ' en ' + sensor.nombre + ' que está en (' + sensor.latitud +
             ', ' + sensor.longitud + ') con IP ' + sensor.IP;
 
@@ -233,10 +237,6 @@ class Sensor {
     
     // Actualiza el infowindow con la información del sensor
     mostrarInformacion(){
-        // Si aún no ha cargado el id dinámico del infowindow, no hacemos nada
-        if(document.getElementById('temperatura' + this.IP) == null) // TODO - ver si se puede mejorar!!
-            return;
-        
         // Se actualiza el infowindow correspondiente al sensor
         document.getElementById('temperatura' + this.IP).innerHTML = this.temperatura.toString();
         document.getElementById('humedad' + this.IP).innerHTML = this.humedad.toString();
