@@ -14,23 +14,24 @@ void setup() {
 
 void loop() {
   // Una rueda permanece parada, mientras la otra gira.
+  // En el momento en que las dos ruedas no se muevan a la misma velocidad se producirá un cambio en la dirección.
 
-  // En este caso, gira hacia la derecha (avanzando hacia delante)
+  // En este caso, gira hacia la izquierda (avanzando hacia delante)
   servoIzq.write(90); // rueda izda parada
   servoDer.write(180); // rueda derecha a maxima velocidad
   delay(3000); 
 
-  // En este caso, gira hacia la derecha (avanzando hacia atrás)
+  // En este caso, gira hacia la izquierda (avanzando hacia atrás)
   servoIzq.write(90); 
   servoDer.write(0);
   delay(3000);
 
-  // En este caso, gira hacia la izquierda (avanzando hacia delante)
+  // En este caso, gira hacia la derecha (avanzando hacia delante)
   servoIzq.write(0); // rueda izda parada
   servoDer.write(90); // rueda derecha a maxima velocidad
   delay(3000); 
 
-  // En este caso, gira hacia la izquierda (avanzando hacia atrás)
+  // En este caso, gira hacia la derecha (avanzando hacia atrás)
   servoIzq.write(180); 
   servoDer.write(90);
   delay(3000);
