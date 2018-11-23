@@ -11,7 +11,7 @@ const int leftServoPin = 8;
 const int NO_LINE = LOW; // valor que devuelve el sensor IR cuando no detecta linea
 const int LINE = HIGH; // valor que devuelve el sensor IR cuando detecta linea
 
-const int leftServoForward = 0; //
+const int leftServoForward = 0;
 const int rightServoForward = 180;
 const int leftServoBackward = 180;
 const int rightServoBackward = 0;
@@ -38,7 +38,7 @@ void loop() {
   else if (leftIRSensor() == NO_LINE && rightIRSensor() == LINE) {
     turnRight();
   }
-  else { // Si no detecta lionea por ninguno de los dos sensores, se detiene
+  else { // Si no detecta linea por ninguno de los dos sensores, se detiene
     stopRobot();
   }
 }
