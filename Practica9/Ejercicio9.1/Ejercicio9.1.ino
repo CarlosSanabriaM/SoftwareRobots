@@ -1,63 +1,85 @@
 #include <Servo.h>
-int NO_LINEA = LOW; // También podría ponerse 0
-int LINEA = HIGH; // También podría ponerse 1
-Servo servoIzq;
-Servo servoDer;
-int pinIrDer = 3;
-int pinIrIzq = 2;
-int pinServoDer = 9;
-int pinServoIzq = 8;
 
-int alanteIzquierda = 0;
-int alanteDerecha = 180;
-int atrasIzquierda = 180;
-int atrasDerecha = 0;
-int alto = 90;
+Servo leftServo;
+Servo rightServo;
+
+const int rightIRSensorPin = 3;
+const int leftIRSensorPin = 2;
+const int rightServoPin = 9;
+const int leftServoPin = 8;
+
+const int NO_LINE = LOW; // valor que devuelve el sensor IR cuando no detecta linea
+const int LINE = HIGH; // valor que devuelve el sensor IR cuando detecta linea
+
+const int leftServoForward = 0; //
+const int rightServoForward = 180;
+const int leftServoBackward = 180;
+const int rightServoBackward = 0;
+const int stopServo = 90;
+
 
 
 void setup() {
-  Serial.begin(9600); // Descomentar si queréis debuguear por consola
-  pinMode(pinIrDer, INPUT);
-  pinMode(pinIrIzq, INPUT);
+  //Serial.begin(9600); // Descomentar para debuguear por consola
+  pinMode(rightIRSensorPin, INPUT);
+  pinMode(leftIRSensorPin, INPUT);
 
-  servoIzq.attach(pinServoIzq);
-  servoDer.attach(pinServoDer);
+  leftServo.attach(leftServoPin);
+  rightServo.attach(rightServoPin);
 }
 
 void loop() {
-  if (digitalRead(pinIrIzq) == LINEA && digitalRead(pinIrDer) == LINEA) {
-    seguirDeFrente();
-  } else if (digitalRead(pinIrIzq) == LINEA && digitalRead(pinIrDer) == NO_LINEA) {
-    girarHaciaIzquierda();
-  } else if (digitalRead(pinIrIzq) == NO_LINEA && digitalRead(pinIrDer) == LINEA) {
-    girarHaciaDerecha();
-  } else {
-    buscarLinea();
+  if (leftIRSensor() == LINE && rightIRSensor() == LINE) {
+    goForward();
+  }
+  else if (leftIRSensor() == LINE && rightIRSensor() == NO_LINE) {
+    turnLeft();
+  }
+  else if (leftIRSensor() == NO_LINE && rightIRSensor() == LINE) {
+    turnRight();
+  }
+  else { // Si no detecta lionea por ninguno de los dos sensores, se detiene
+    stopRobot();
   }
 }
 
-void seguirDeFrente() {
-  servoIzq.write(alanteIzquierda);
-  servoDer.write(alanteDerecha);
+
+/* Le indica al robot que avanze hacia delante a máxima velocidad. */
+void goForward() {
+  leftServo.write(leftServoForward);
+  rightServo.write(rightServoForward);
 }
 
-void girarHaciaDerecha() {
-  servoIzq.write(alanteIzquierda);
-  servoDer.write(alto);
+/* Le indica al robot que gire hacia la izquierda. */
+void turnLeft() {
+  leftServo.write(stopServo);
+  rightServo.write(rightServoForward);
 }
 
-void girarHaciaIzquierda() {
-
-  servoIzq.write(alto);
-  servoDer.write(alanteDerecha);
+/* Le indica al robot que gire hacia la derecha. */
+void turnRight() {
+  leftServo.write(leftServoForward);
+  rightServo.write(stopServo);
 }
 
-void marchaAtras() {
-  servoIzq.write(atrasIzquierda);
-  servoDer.write(atrasDerecha);
+/* Le indica al robot que avanze hacia atrás a máxima velocidad. */
+void goBackward() {
+  leftServo.write(leftServoBackward);
+  rightServo.write(rightServoBackward);
 }
 
-void buscarLinea() {
-  servoIzq.write(alto);
-  servoDer.write(alto);
+/* Le indica al robot que se detenga. */
+void stopRobot() {
+  leftServo.write(stopServo);
+  rightServo.write(stopServo);
+}
+
+/* Devuelve la medición del sensor de infrarrojos de detección de linea izquierdo. */
+int leftIRSensor() {
+  return digitalRead(leftIRSensorPin);
+}
+
+/* Devuelve la medición del sensor de infrarrojos de detección de linea derecho. */
+int rightIRSensor() {
+  return digitalRead(rightIRSensorPin);
 }
