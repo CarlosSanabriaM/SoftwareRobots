@@ -1,7 +1,7 @@
 long distance; 
 long responseTime;
-int pinTrig = 9; 
-int pinEcho = 10;
+int pinTrig = 4; 
+int pinEcho = 5;
 
 void setup() {
   Serial.begin(9600);
