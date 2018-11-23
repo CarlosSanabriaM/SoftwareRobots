@@ -19,11 +19,16 @@ const int stopServo = 90;
 
 const int leftServoForwardSlow = 20; // La rueda izquierda avanza hacia delante, pero más despacio que a la velocidad máxima.
 
-int turn = 10; // Indica como se incrementa el giro cuando está buscando línea.
-unsigned long timeLastTurnIncrease = 0; // Almacena el instante en el que incrementó el giro por primera vez.
+
 boolean haveToResetTurnVariables = true; // Indica que cuando pierda la línea, debe resetear las variables de giro.
-const int TIME_INCREASE_TURN = 5000; // Tiempo entre incrementos del giro cuando está buscando línea.
-const int INITIAL_TURN = 5; // Almacena el giro inicial al que se somete el robot cuando empieza a buscar línea.
+
+int timeIncreaseTurn; // Tiempo entre incrementos del giro cuando está buscando línea.
+const int INITIAL_TIME_INCREASE_TURN = 5000; // Tiempo entre incrementos del giro cuando está buscando línea.
+const int TIME_INCREASE_TURN_INCREASE = 2000; // Incremento que se aplica al tiempo entre incrementos del giro.
+
+int turn; // Indica como se incrementa el giro cuando está buscando línea.
+unsigned long timeLastTurnIncrease; // Almacena el instante en el que incrementó el giro por primera vez.
+const int INITIAL_TURN = 10; // Almacena el giro inicial al que se somete el robot cuando empieza a buscar línea.
 const int TURN_INCREASE = 5; // Incrementos en el giro del robot cuando está buscando línea.
 const int TURN_LIMIT = 40; // Incrementos en el giro del robot cuando está buscando línea.
 
@@ -103,13 +108,15 @@ void lookForLine() {
   if (haveToResetTurnVariables) {
     timeLastTurnIncrease = millis();
     turn = INITIAL_TURN; // El giro empieza en el valor inicial
+    timeIncreaseTurn = INITIAL_TIME_INCREASE_TURN; // El tiempo entre incrementos empieza en el valor inicial
     haveToResetTurnVariables = false;
   }
 
-  // Si han pasado más de TIME_INCREASE_TURN segundos desde el ultimo incremento de giro y no se supera el giro límite (sumando el incremento)
-  if (millis() - timeLastTurnIncrease > TIME_INCREASE_TURN && turn + TURN_INCREASE <= TURN_LIMIT ) {
+  // Si han pasado más de timeIncreaseTurn segundos desde el ultimo incremento de giro y no se supera el giro límite (sumando el incremento)
+  if (millis() - timeLastTurnIncrease > timeIncreaseTurn && turn + TURN_INCREASE <= TURN_LIMIT ) {
     timeLastTurnIncrease = millis();
     turn += TURN_INCREASE; // se incrementa el giro.
+    timeIncreaseTurn += TIME_INCREASE_TURN_INCREASE; // se incrementa el tiempo entre incrementos.
   }
 
   spiralPath();
