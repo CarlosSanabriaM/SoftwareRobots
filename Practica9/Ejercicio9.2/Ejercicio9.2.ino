@@ -17,7 +17,7 @@ const int leftServoBackward = 180;
 const int rightServoBackward = 0;
 const int stopServo = 90;
 
-int iteracionGiro = 10;
+int turn = 10; // Indica como se incrementa el giro
 unsigned long timeStartedLookingForLine = 0; // Almacena el instante en el que comenzó a buscar la línea.
 boolean isFirstMomentLookingForLine = true; // Indica si acaba de empezar a buscar la línea.
 #define TIME_INCREASE_TURN 5000
@@ -101,13 +101,13 @@ void lookForLine() {
   }
 
   // Si han pasado más de TIME_INCREASE_TURN
-  if (millis() - timeStartedLookingForLine > TIME_INCREASE_TURN && iteracionGiro < 50 ) {
+  if (millis() - timeStartedLookingForLine > TIME_INCREASE_TURN && turn < 50 ) {
     timeStartedLookingForLine = millis();
-    iteracionGiro += 3;
+    turn += 3;
   }
 
   leftServo.write(leftServoForward);
-  rightServo.write(stopServo + iteracionGiro);
+  rightServo.write(stopServo + turn);
 }
 
 /*  */
