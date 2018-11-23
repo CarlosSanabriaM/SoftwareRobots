@@ -3,27 +3,46 @@ Programas y documentación para la asignatura de Software para Robots del grado 
 
 ## Ejercicios Resueltos
 
-1. Practica 1:
-    1.1. Dado 1.1 (0,2 puntos)
-	1.2. Memoria 1.2 (0,4 puntos)
-	1.3. Zumbador 1.3 (0,6 puntos)
+- **Practica 1:**
 
-2. Practica 2:
-	2.1. Abrir 2.1 (0,15 puntos)
-	2.2. Cerrar 2.2 (0,15 puntos)
-	2.3. Contraseña 2.3 (0,15 puntos)
-	2.4. Auto 2.4 (0,15 puntos)
-	2.5. Auto 2.5 (0,2 puntos)
-	2.6. Semáforo 2.6 (0,2 puntos)
+    - Dado electrónico 1.1 (0,2 puntos)
+    - Juego de memoria 1.2 (0,4 puntos)
+    - Ampliar Simón con el Zumbador y LED RGB 1.3 (0,6 puntos)
 
-3. Practica 3:
+- **Practica 2:**
 
-4. Practica 4:
-	4.1. Teleoperado 4.1 (0,15 puntos)
-	4.4. Velocidad 4.2 (0,15 puntos)
-	4.3. Automático 4.3 (0,3 puntos)
-	4.4. Coordenadas 4.4 (0,3 puntos)
-	4.5. Consola 4.5 (0,5 puntos)
-	4.6. Precisión 4.6 (0,15 puntos)
+    - Abrir puerta 2.1 (0,15 puntos)
+    - Cerrar puerta 2.2 (0,15 puntos)
+    - Contraseña 2.3 (0,15 puntos)
+    - Cierre automático seguro usando ultrasonidos 2.4 (0,15 puntos)
+    - Apertura y cierre automático con contador de entradas 2.5 (0,2 puntos)
+    - Configuración de tiempo y semáforo 2.6 (0,2 puntos)
 
-5. Practica 5:
+- **Practica 3:**
+
+    - Diseño de piezas con OpenScad 3.1:
+        - Objeto 1 (0,4 puntos, **en proceso: Jose**)
+        - Objeto 3 (0,4 puntos, **en proceso: Jose**)
+
+- **Practica 4:**
+
+    - Actuador lineal teleoperado 4.1 (0,15 puntos)
+    - Dos niveles de velocidad 4.2 (0,15 puntos)
+    - Recorrido automático 4.3 (0,3 puntos)
+    - Sistema de coordenadas 4.4 (0,3 puntos)
+    - Coordenadas desde consola 4.5 (0,5 puntos)
+    - Mejora de la precisión 4.6 (0,15 puntos)
+
+- **Practica 5:**
+
+    - Manipulador cartesiano teleoperado 5.2 (0,5 puntos)
+    
+- **Practica 7:**
+
+    - Red de sensores de temperatura y humedad 7.1 (1 punto)
+    
+- **Practica 9:**
+
+    - Sigue líneas 9.1 (0,5 puntos)
+    - Encontrar el circuito 9.2 (0,75 puntos)
+    - Esquivar obstáculos 9.3 (0,75 puntos)
