@@ -33,18 +33,25 @@ const int TURN_LIMIT = 40; // Incrementos en el giro del robot cuando está busc
 // Variables para el sensor de ultrasonidos (sensor exterior)
 const int pinTrig = 4;
 const int pinEcho = 5;
-const int DISTANCE_SOMETHING_IN_FRONT = 10; // distancia en cm a partir de la cual se considera que algo ha llegado a la meta
-const int delayBetweenUltrasonicSensorMeasurements = 300; // tiempo mínimo (en milisegundos) que se ha de esperar entre cada medición del sensor de ultrasonidos (recomendable más de 20 microsegundos)
+const long DISTANCE_SOMETHING_IN_FRONT = 15; // distancia en cm a partir de la cual se considera que hay algo delante del robot
+const int DELAY_BETWEEN_ULTRASONIC_SENSOR_MEASUREMENTS = 300; // tiempo mínimo (en milisegundos) que se ha de esperar entre cada medición del sensor de ultrasonidos (recomendable más de 20 microsegundos)
 unsigned long timeLastCheckIfThereIsSomethingInFront; // Almacena el instante el que se comprobó por última vez si algo se movía (en milisegundos)
 
-const int TIME_TURN_LEFT_AVOIDING_OBJECT = 2000; // Tiempo durante el cual se mueve hacia la izquierda cuando encuentra un objeto delante
+// Variables para el tiempo al esquivar un objeto
+const int TIME_STOP_AVOIDING_OBJECT = 1500; // Tiempo durante el cual se detiene cuando encuentra un objeto delante
+const int TIME_TURN_LEFT_AVOIDING_OBJECT = 1000; // Tiempo durante el cual se mueve hacia la izquierda cuando encuentra un objeto delante
+const int TIME_TURN_RIGHT_AVOIDING_OBJECT = 1000; // Tiempo durante el cual se mueve hacia la derecha cuando encuentra un objeto delante
+const int TIME_GO_FORWARD_AVOIDING_OBJECT = 500; // Tiempo durante el cual se mueve hacia delante cuando encuentra un objeto delante
 
 
 
 void setup() {
-  Serial.begin(9600); // Descomentar para debuguear por consola
+  Serial.begin(9600);
   pinMode(rightIRSensorPin, INPUT);
   pinMode(leftIRSensorPin, INPUT);
+
+  pinMode(pinTrig, OUTPUT);
+  pinMode(pinEcho, INPUT);
 
   leftServo.attach(leftServoPin);
   rightServo.attach(rightServoPin);
@@ -150,7 +157,7 @@ void hasFoundLine() {
 /* Si ha pasado el tiempo minimo entre mediciones del sensor de ultrasonidos, comprueba si hay algo delante del robot. */
 void tryToCheckIfThereIsSomethingInFront() {
   // Si ha pasado el tiempo mínimo entre mediciones con el sensor de ultrasonidos desde la última vez que se comprobó si había algo delante
-  if (millis() - timeLastCheckIfThereIsSomethingInFront >= delayBetweenUltrasonicSensorMeasurements) {
+  if (millis() - timeLastCheckIfThereIsSomethingInFront >= DELAY_BETWEEN_ULTRASONIC_SENSOR_MEASUREMENTS) {
     checkIfThereIsSomethingInFront();
   }
 }
@@ -167,14 +174,29 @@ void checkIfThereIsSomethingInFront() {
 
 /* Esquiva el obstáculo que tiene delante. */
 void avoidObject() {
-//  stopRobot(); // TODO
-//  delay(2000); // TODO
+  Serial.println("Esquivar objeto.");
 
-  // Se mueve el robot hacia la izquierda durante cierto tiempo y luego,
-  // al detectar que no hay linea, comenzará el movimiento en espiral en sentido horario, 
-  // que corregirá el movimiento, haciendo que se mueva hacia la derecha hasta que encuentre la línea
+  // Se para el robot durante cierto tiempo
+  stopRobot();
+  delay(TIME_STOP_AVOIDING_OBJECT);
+
+  // Se mueve el robot hacia la izquierda durante cierto tiempo
   turnLeft();
   delay(TIME_TURN_LEFT_AVOIDING_OBJECT);
+
+  // Avanza durante cierto tiempo
+  goForward();
+  delay(TIME_GO_FORWARD_AVOIDING_OBJECT);
+
+
+  // Se mueve el robot hacia la derecha durante cierto tiempo
+  turnRight();
+  delay(TIME_TURN_RIGHT_AVOIDING_OBJECT);
+
+  // Mientras no encuentre línea, se mueve hacia la derecha ligeramente
+  leftServo.write(10);
+  rightServo.write(110);
+  while (leftIRSensor() == NO_LINE && rightIRSensor() == NO_LINE);
 }
 
 /* Devuelve la distancia en cm al sensor de ultrasonidos */
