@@ -21,8 +21,8 @@ Programas y documentación para la asignatura de Software para Robots del grado 
 - **Practica 3:**
 
     - Diseño de piezas con OpenScad 3.1:
-        - Objeto 1 (0,4 puntos, **en proceso: Jose**)
-        - Objeto 3 (0,4 puntos, **en proceso: Jose**)
+        - Objeto 1: MobBob (0,4 puntos)
+        - Objeto 3: Robot Móvil (0,4 puntos)
 
 - **Practica 4:**
 
@@ -46,3 +46,5 @@ Programas y documentación para la asignatura de Software para Robots del grado 
     - Sigue líneas 9.1 (0,5 puntos)
     - Encontrar el circuito 9.2 (0,75 puntos)
     - Esquivar obstáculos 9.3 (0,75 puntos)
+    
+***Puntuación Actual=*** *8.05 puntos*
