@@ -6,36 +6,37 @@ use <LegPart-v3.scad>
 use <PhoneHolder.scad>
 use <ServoBrace.scad>
 
-//base del movil
+// Base del movil
 translate([0,0,40])
   phoneHolder();
 
-//pieza detras
+// Pieza trasera
 translate([0,18,48])
   battrack();
 
-//pata izquierda
+// Pata izquierda
 translate([40,0,0])
   footleft();
 
-//pata derecha
+// Pata derecha
 translate([-30,0,0])
   footright();
 
-//base
+// Base
 translate([0,0,40])
   hip();
-//pieza pata izquierda
+  
+// Enganche pata izquierda
 translate([30,20,5])
   rotate([90,0,90])
     legPartv3();
 
-//pieza pata derecha
+// Enganche pata derecha
 translate([-40,20,5])
   rotate([90,0,90])
     legPartv3();
 
-//pieza detras
+// Engache trasero para servos
 translate([0,30,54])
   rotate([90,0,0])
     servoBrace();
