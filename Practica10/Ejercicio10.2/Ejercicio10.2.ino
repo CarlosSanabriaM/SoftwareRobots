@@ -5,7 +5,7 @@
   En un cruce, la prioridad de decisiones es la siguiente:
     1. Girar a la izquierda.
     1. Seguir de frente.
-    3. Girar a la derecha. 
+    3. Girar a la derecha.
   Se toma la decisión disponible de mayor prioridad
 */
 
@@ -117,7 +117,7 @@ void turnAround() {
   rightServo.write(rightServoForward);
   delay(TURN_AROUND_TIME);
 
-  robotDecitions += "B"; // almacenamos que el robot ha retrocedido (back)
+  robotDecitions += "R"; // almacenamos que el robot ha retrocedido (back)
 }
 
 /* Le indica al robot que corriga su camino hacia la izquierda, para poder seguir recto. */
@@ -155,8 +155,8 @@ void checkTypeOfCrossingRight() {
   // _ X X _
   if(assertIRSensorsValues(NO_LINE, LINE, LINE, NO_LINE)) {
     // Algo de línea delante, es una curva a la derecha y de frente
-    goForward(); 
-    robotDecitions += "F"; // almacenamos que el robot va hacia delante (forward)
+    goForward();
+    robotDecitions += "A"; // almacenamos que el robot va hacia delante (forward)
   }
   // _ _ _ _
   else { // else if(assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
@@ -174,7 +174,7 @@ void checkTypeOfCrossingLeft() {
   if(assertIRSensorsValues(NO_LINE, LINE, LINE, NO_LINE)) {
     // Algo de línea delante, es una curva a la izquierda y de frente
     turnLeft();
-    robotDecitions += "L"; // almacenamos que el robot va hacia la izquierda (left)
+    robotDecitions += "I"; // almacenamos que el robot va hacia la izquierda (left)
   }
   // _ _ _ _
   else { // else if(assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
@@ -196,13 +196,13 @@ void checkTypeOfCrossingAllLine() {
   if(assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
     // Es un cruce a la izquierda y a la derecha
     turnLeft();
-    robotDecitions += "L"; // almacenamos que el robot va hacia la izquierda (left)
+    robotDecitions += "I"; // almacenamos que el robot va hacia la izquierda (left)
   }
   // _ X X _
   else if(assertIRSensorsValues(NO_LINE, LINE, LINE, NO_LINE)) {
     // Es un cruce a la izquierda, a la derecha y de frente
     turnLeft();
-    robotDecitions += "L"; // almacenamos que el robot va hacia la izquierda (left)
+    robotDecitions += "I"; // almacenamos que el robot va hacia la izquierda (left)
   }
   // X X X X
   else if(assertIRSensorsValues(LINE, LINE, LINE, LINE)) {
@@ -244,8 +244,45 @@ void updateAllIRSensors() {
 }
 
 /* El robot ha alcanzado la meta, por lo que se detiene 10 segundos. */
-void robotReachesTheGoal(){
+void robotReachesTheGoal() {
   // TODO - quizas se deba dejar avanzar al robot x ms hacia delante para entrar del todo en la meta
   stopRobot();
+  reduceDecitions();
   delay(STOP_ROBOT_REACH_GOAL_TIME);
+}
+
+/*
+  Aplica reglas para reducir las decisiones que debe tomar el robot,
+  y llegar así a la meta usando el camino óptimo.
+*/
+void reduceDecitions() {
+  int i = 0;
+  Serial.println(robotDecitions);
+
+  while(i <= robotDecitions.length() - 3) {
+    if(robotDecitions.substring(i, i + 3) == "ARI") { // coge [i, i+2] caracteres
+      applyReduction(i, "D");
+      return reduceDecitionsRecursive();
+    }
+    else if(robotDecitions.substring(i, i + 3) == "IRI") { // coge [i, i+2] caracteres
+      applyReduction(i, "A");
+      return reduceDecitionsRecursive();
+    }
+    else if(robotDecitions.substring(i, i + 3) == "IRA") { // coge [i, i+2] caracteres
+      applyReduction(i, "D");
+      return reduceDecitionsRecursive();
+    }
+    else if(robotDecitions.substring(i, i + 3) == "DRI") { // coge [i, i+2] caracteres
+      applyReduction(i, "R");
+      return reduceDecitionsRecursive();
+    }
+
+    i++;
+    Serial.println(robotDecitions);
+  }
+}
+
+/* Actualiza el valor de robotDecitions, aplicando la reducción indicada a la parte indicada. */
+void applyReduction(int i, String reduction) {
+  robotDecitions = robotDecitions.substring(0, i) + reduction + robotDecitions.substring(i+3);
 }
