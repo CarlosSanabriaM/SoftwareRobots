@@ -36,6 +36,8 @@ const int TURN_AROUND_TIME = 1000; // Tiempo durante el cual el robot gira sobre
 const int GO_FORWARD_CHECK_CROSSING_TIME = 300; // Tiempo durante el cual el robot avanza hacia delante para comprobar el tipo de cruce
 const int STOP_ROBOT_REACH_GOAL_TIME = 10000; // Tiempo durante el cual el robot se queda parado al alcanzar la meta
 
+String robotDecitions = ""; // Almacena las decisiones que toma el robot: giros, avanzar hacia delante, retroceder, ... (solo en cruces o similar)
+
 
 
 void setup() {
@@ -114,6 +116,8 @@ void turnAround() {
   leftServo.write(leftServoBackward);
   rightServo.write(rightServoForward);
   delay(TURN_AROUND_TIME);
+
+  robotDecitions += "B"; // almacenamos que el robot ha retrocedido (back)
 }
 
 /* Le indica al robot que corriga su camino hacia la izquierda, para poder seguir recto. */
@@ -152,11 +156,13 @@ void checkTypeOfCrossingRight() {
   if(assertIRSensorsValues(NO_LINE, LINE, LINE, NO_LINE)) {
     // Algo de línea delante, es una curva a la derecha y de frente
     goForward(); 
+    robotDecitions += "F"; // almacenamos que el robot va hacia delante (forward)
   }
   // _ _ _ _
   else { // else if(assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
     // Es una curva solo a la derecha
     turnRight();
+    // No se almacena la decisión, porque está obligado a ir a la derecha. No es un cruce con varias opciones.
   }
 }
 
@@ -168,11 +174,13 @@ void checkTypeOfCrossingLeft() {
   if(assertIRSensorsValues(NO_LINE, LINE, LINE, NO_LINE)) {
     // Algo de línea delante, es una curva a la izquierda y de frente
     turnLeft();
+    robotDecitions += "L"; // almacenamos que el robot va hacia la izquierda (left)
   }
   // _ _ _ _
   else { // else if(assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
     // Es una curva solo a la izquierda
     turnLeft();
+    // No se almacena la decisión, porque está obligado a ir a la izquierda. No es un cruce con varias opciones.
   }
 }
 
@@ -188,16 +196,19 @@ void checkTypeOfCrossingAllLine() {
   if(assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
     // Es un cruce a la izquierda y a la derecha
     turnLeft();
+    robotDecitions += "L"; // almacenamos que el robot va hacia la izquierda (left)
   }
   // _ X X _
   else if(assertIRSensorsValues(NO_LINE, LINE, LINE, NO_LINE)) {
     // Es un cruce a la izquierda, a la derecha y de frente
     turnLeft();
+    robotDecitions += "L"; // almacenamos que el robot va hacia la izquierda (left)
   }
   // X X X X
   else if(assertIRSensorsValues(LINE, LINE, LINE, LINE)) {
     // Es la meta
     robotReachesTheGoal();
+    // No se almacena la decisión, porque está obligado a ir de frente. No es un cruce con varias opciones.
   }
 }
 
