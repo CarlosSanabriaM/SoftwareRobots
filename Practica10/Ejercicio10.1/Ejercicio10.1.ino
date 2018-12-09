@@ -31,7 +31,10 @@ const int leftServoBackward = 180;
 const int rightServoBackward = 0;
 const int stopServo = 90;
 
-const int INITIAL_DELAY_TIME = 5000; // Inicialmente, el robot espera 5 segundos antes de ejecutar el loop
+const int INITIAL_STOP_ROBOT_TIME = 5000; // Inicialmente, el robot espera 5 segundos antes de ejecutar el loop
+const int TURN_AROUND_TIME = 1000; // Tiempo durante el cual el robot gira sobre sí mismo para dar la vuelta
+const int GO_FORWARD_CHECK_CROSSING_TIME = 300; // Tiempo durante el cual el robot avanza hacia delante para comprobar el tipo de cruce
+const int STOP_ROBOT_REACH_GOAL_TIME = 10000; // Tiempo durante el cual el robot se queda parado al alcanzar la meta
 
 
 
@@ -46,7 +49,7 @@ void setup() {
   leftServo.attach(leftServoPin);
   rightServo.attach(rightServoPin);
 
-  delay(INITIAL_DELAY_TIME);
+  delay(INITIAL_STOP_ROBOT_TIME);
 }
 
 void loop() {
@@ -107,10 +110,10 @@ void goForward() {
 
 /* Le indica al robot que se de la vuelta. */
 void turnAround() {
-  // Gira sobre sí mismo en sentido anti-horario
+  // Gira sobre sí mismo en sentido anti-horario, 180º
   leftServo.write(leftServoBackward);
   rightServo.write(rightServoForward);
-  delay(1000);
+  delay(TURN_AROUND_TIME);
 }
 
 /* Le indica al robot que corriga su camino hacia la izquierda, para poder seguir recto. */
@@ -127,12 +130,18 @@ void correctionToTheRight() {
 
 /* Le indica al robot que gire hacia la izquierda. */
 void turnLeft() {
-  //TODO
+  // Gira sobre sí mismo en sentido anti-horario, 90º
+  leftServo.write(leftServoBackward);
+  rightServo.write(rightServoForward);
+  delay(TURN_AROUND_TIME/2);
 }
 
 /* Le indica al robot que gire hacia la derecha. */
 void turnRight() {
-  //TODO
+  // Gira sobre sí mismo en sentido horario, 90º
+  leftServo.write(leftServoForward);
+  rightServo.write(rightServoBackward);
+  delay(TURN_AROUND_TIME/2);
 }
 
 /* Comprueba si es un cruce a la derecha o a la derecha y de frente. */
@@ -196,11 +205,11 @@ void checkTypeOfCrossingAllLine() {
 void goForwardAndUpdateAllIRSensors() {
   // Avanzamos un poco para comprobar qué tipo de cruce es
   goForward();
-  delay(300);
+  delay(GO_FORWARD_CHECK_CROSSING_TIME);
 
   // Paramos un corto periodo de tiempo
   stopRobot();
-  delay(300);
+  delay(GO_FORWARD_CHECK_CROSSING_TIME);
 
   updateAllIRSensors();
 }
@@ -225,5 +234,7 @@ void updateAllIRSensors() {
 
 /* El robot ha alcanzado la meta, por lo que se detiene 10 segundos. */
 void robotReachesTheGoal(){
-  delay(10000);
+  // TODO - quizas se deba dejar avanzar al robot x ms hacia delante para entrar del todo en la meta
+  stopRobot();
+  delay(STOP_ROBOT_REACH_GOAL_TIME);
 }
