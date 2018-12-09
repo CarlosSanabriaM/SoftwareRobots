@@ -262,19 +262,19 @@ void reduceDecitions() {
   while(i <= robotDecitions.length() - 3) {
     if(robotDecitions.substring(i, i + 3) == "ARI") { // coge [i, i+2] caracteres
       applyReduction(i, "D");
-      return reduceDecitionsRecursive();
+      return reduceDecitions();
     }
     else if(robotDecitions.substring(i, i + 3) == "IRI") { // coge [i, i+2] caracteres
       applyReduction(i, "A");
-      return reduceDecitionsRecursive();
+      return reduceDecitions();
     }
     else if(robotDecitions.substring(i, i + 3) == "IRA") { // coge [i, i+2] caracteres
       applyReduction(i, "D");
-      return reduceDecitionsRecursive();
+      return reduceDecitions();
     }
     else if(robotDecitions.substring(i, i + 3) == "DRI") { // coge [i, i+2] caracteres
       applyReduction(i, "R");
-      return reduceDecitionsRecursive();
+      return reduceDecitions();
     }
 
     i++;
