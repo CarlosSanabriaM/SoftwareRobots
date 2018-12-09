@@ -1,5 +1,14 @@
 #include <Servo.h>
 
+/*
+  Se va a aplicar el algoritmo de la mano izquierda.
+  En un cruce, la prioridad de decisiones es la siguiente:
+    1. Girar a la izquierda.
+    1. Seguir de frente.
+    3. Girar a la derecha. 
+  Se toma la decisión disponible de mayor prioridad
+*/
+
 Servo leftServo;
 Servo rightServo;
 
@@ -96,6 +105,14 @@ void goForward() {
   rightServo.write(rightServoForward);
 }
 
+/* Le indica al robot que se de la vuelta. */
+void turnAround() {
+  // Gira sobre sí mismo en sentido anti-horario
+  leftServo.write(leftServoBackward);
+  rightServo.write(rightServoForward);
+  delay(1000);
+}
+
 /* Le indica al robot que corriga su camino hacia la izquierda, para poder seguir recto. */
 void correctionToTheLeft() {
   leftServo.write(stopServo);
@@ -108,18 +125,14 @@ void correctionToTheRight() {
   rightServo.write(stopServo);
 }
 
-/* Le indica al robot que avanze hacia atrás a máxima velocidad. */
-void goBackward() {
-  leftServo.write(leftServoBackward);
-  rightServo.write(rightServoBackward);
+/* Le indica al robot que gire hacia la izquierda. */
+void turnLeft() {
+  //TODO
 }
 
-/* Le indica al robot que se de la vuelta. */
-void turnAround() {
-  // Gira sobre sí mismo en sentido anti-horario
-  leftServo.write(leftServoBackward);
-  rightServo.write(rightServoForward);
-  delay(1000);
+/* Le indica al robot que gire hacia la derecha. */
+void turnRight() {
+  //TODO
 }
 
 /* Comprueba si es un cruce a la derecha o a la derecha y de frente. */
@@ -129,12 +142,12 @@ void checkTypeOfCrossingRight() {
   // _ X X _
   if(assertIRSensorsValues(NO_LINE, LINE, LINE, NO_LINE)) {
     // Algo de línea delante, es una curva a la derecha y de frente
-    // TODO - moverse en funcion del alg usado
+    goForward(); 
   }
   // _ _ _ _
   else { // else if(assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
     // Es una curva solo a la derecha
-    // TODO - moverse en funcion del alg usado
+    turnRight();
   }
 }
 
@@ -145,12 +158,12 @@ void checkTypeOfCrossingLeft() {
   // _ X X _
   if(assertIRSensorsValues(NO_LINE, LINE, LINE, NO_LINE)) {
     // Algo de línea delante, es una curva a la izquierda y de frente
-    // TODO - moverse en funcion del alg usado
+    turnLeft();
   }
   // _ _ _ _
   else { // else if(assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
     // Es una curva solo a la izquierda
-    // TODO - moverse en funcion del alg usado
+    turnLeft();
   }
 }
 
@@ -165,17 +178,17 @@ void checkTypeOfCrossingAllLine() {
   // _ _ _ _
   if(assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
     // Es un cruce a la izquierda y a la derecha
-    // TODO - moverse en funcion del alg usado
+    turnLeft();
   }
   // _ X X _
   else if(assertIRSensorsValues(NO_LINE, LINE, LINE, NO_LINE)) {
     // Es un cruce a la izquierda, a la derecha y de frente
-    // TODO - moverse en funcion del alg usado
+    turnLeft();
   }
   // X X X X
   else if(assertIRSensorsValues(LINE, LINE, LINE, LINE)) {
     // Es la meta
-    // TODO - moverse en funcion del alg usado
+    robotReachesTheGoal();
   }
 }
 
@@ -208,4 +221,9 @@ void updateAllIRSensors() {
         IRSensorsValues[i] = LINE;
     }
   }
+}
+
+/* El robot ha alcanzado la meta, por lo que se detiene 10 segundos. */
+void robotReachesTheGoal(){
+  delay(10000);
 }
