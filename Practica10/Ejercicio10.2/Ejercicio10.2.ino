@@ -30,11 +30,15 @@ const int rightServoForward = 180;
 const int leftServoBackward = 180;
 const int rightServoBackward = 0;
 const int stopServo = 90;
+const int leftServoForwardSlow = 20; // avanza más lentamente que leftServoForward
+const int rightServoForwardSlow = 160; // avanza más lentamente que rightServoForwardSlow
 
-const int INITIAL_STOP_ROBOT_TIME = 5000; // Inicialmente, el robot espera 5 segundos antes de ejecutar el loop
-const int TURN_AROUND_TIME = 1000; // Tiempo durante el cual el robot gira sobre sí mismo para dar la vuelta
-const int GO_FORWARD_CHECK_CROSSING_TIME = 300; // Tiempo durante el cual el robot avanza hacia delante para comprobar el tipo de cruce
-const int STOP_ROBOT_REACH_GOAL_TIME = 10000; // Tiempo durante el cual el robot se queda parado al alcanzar la meta
+const int INITIAL_STOP_ROBOT_TIME = 2000; // Inicialmente, el robot espera 5 segundos antes de ejecutar el loop
+const int TURN_AROUND_TIME = 1400; // Tiempo durante el cual el robot gira sobre sí mismo para dar la vuelta
+const int GO_FORWARD_CHECK_CROSSING_TIME = 350; // Tiempo durante el cual el robot avanza hacia delante para comprobar el tipo de cruce
+const int STOP_ROBOT_REACH_GOAL_TIME = 5000; // Tiempo durante el cual el robot se queda parado al alcanzar la meta
+const int GO_BACKWARD_A_LITTLE_TIME = 100; // Tiempo durante el cual el robot se queda parado al alcanzar la meta
+const int LITTLE_DELAY_STOP_ROBOT_TIME = 300; // Tiempo durante el cual el robot se queda parado al alcanzar la meta
 
 String robotDecisions = ""; // Almacena las decisiones que toma el robot: giros, avanzar hacia delante, retroceder, ... (solo en cruces o similar)
 boolean isFirstRound = true; // Indica si es la primera vez que recorre el laberinto o no.
@@ -46,7 +50,7 @@ void setup() {
   Serial.begin(9600); // Descomentar para debuguear por consola
 
   // Para cada uno de los 4 pines de los sensores IR, los inicializamos como pines de entrada
-  for(int i=0; i < 4; i++) {
+  for (int i = 0; i < 4; i++) {
     pinMode(IRSensorsPins[i], INPUT);
   }
 
@@ -71,15 +75,15 @@ void loop() {
   else if (assertIRSensorsValues(NO_LINE, LINE, NO_LINE, NO_LINE)) {
     correctionToTheLeft();
   }
-  // _ X X X
-  else if (assertIRSensorsValues(NO_LINE, LINE, LINE, LINE)) {
-    // Puede ser: "curva a la derecha" o "curva a la derecha y de frente"
-    checkTypeOfCrossingRight();
-  }
   // X X X _
   else if (assertIRSensorsValues(LINE, LINE, LINE, NO_LINE)) {
     // Puede ser: "curva a la izquierda" o "curva a la izquierda y de frente"
     checkTypeOfCrossingLeft();
+  }
+  // _ X X X
+  else if (assertIRSensorsValues(NO_LINE, LINE, LINE, LINE)) {
+    // Puede ser: "curva a la derecha" o "curva a la derecha y de frente"
+    checkTypeOfCrossingRight();
   }
   // X X X X
   else if (assertIRSensorsValues(LINE, LINE, LINE, LINE)) {
@@ -93,6 +97,7 @@ void loop() {
   }
 }
 
+
 /* Retorna si los valores pasados como parámetro coinciden con las últimas mediciones de los sensores IR. */
 boolean assertIRSensorsValues(int IRSensor0, int IRSensor1, int IRSensor2, int IRSensor3) {
   return IRSensorsValues[0] == IRSensor0 && IRSensorsValues[1] == IRSensor1 &&
@@ -105,10 +110,16 @@ void stopRobot() {
   rightServo.write(stopServo);
 }
 
+/* Le indica al robot que se detenga y hace una pequeña pausa. */
+void stopRobotAndDelayALittle() {
+  stopRobot();
+  delay(LITTLE_DELAY_STOP_ROBOT_TIME);
+}
+
 /* Le indica al robot que avanze hacia delante a máxima velocidad. */
 void goForward() {
-  leftServo.write(leftServoForward);
-  rightServo.write(rightServoForward);
+  leftServo.write(leftServoForwardSlow);
+  rightServo.write(rightServoForwardSlow);
 }
 
 /* Le indica al robot que se de la vuelta. */
@@ -117,8 +128,9 @@ void turnAround() {
   leftServo.write(leftServoBackward);
   rightServo.write(rightServoForward);
   delay(TURN_AROUND_TIME);
+  stopRobotAndDelayALittle();
 
-  if(isFirstRound) // TODO - Teoricamente, solo tiene que retroceder alguna vez en la 1º pasada
+  if (isFirstRound) // TODO - Teoricamente, solo tiene que retroceder alguna vez en la 1º pasada (quizas se pueda quitar el if)
     robotDecisions += "R"; // almacenamos que el robot ha retrocedido (back)
 }
 
@@ -139,7 +151,8 @@ void turnLeft() {
   // Gira sobre sí mismo en sentido anti-horario, 90º
   leftServo.write(leftServoBackward);
   rightServo.write(rightServoForward);
-  delay(TURN_AROUND_TIME/2);
+  delay(TURN_AROUND_TIME / 2);
+  stopRobotAndDelayALittle();
 }
 
 /* Le indica al robot que gire hacia la derecha. */
@@ -147,17 +160,19 @@ void turnRight() {
   // Gira sobre sí mismo en sentido horario, 90º
   leftServo.write(leftServoForward);
   rightServo.write(rightServoBackward);
-  delay(TURN_AROUND_TIME/2);
+  delay(TURN_AROUND_TIME / 2);
+  stopRobotAndDelayALittle();
 }
 
 /* Comprueba si es un cruce a la derecha o a la derecha y de frente. */
 void checkTypeOfCrossingRight() {
-  goForwardAndUpdateAllIRSensors();
+  // Al haber un cruce a la dcha, el robot debe avanzar algo más para comprobar el tipo de cruce
+  goForwardAndUpdateAllIRSensors(400);
 
   // _ X X _
-  if(assertIRSensorsValues(NO_LINE, LINE, LINE, NO_LINE)) {
-    // Algo de línea delante, es una curva a la derecha y de frente
-    if(isFirstRound) {
+  if (assertIRSensorsValues(NO_LINE, LINE, LINE, NO_LINE)) {
+    // Algo de línea delante, es una curva a la derecha y de frente
+    if (isFirstRound) {
       goForward();
       robotDecisions += "A"; // almacenamos que el robot va hacia delante (forward)
     }
@@ -165,7 +180,7 @@ void checkTypeOfCrossingRight() {
       followStoredDecision();
   }
   // _ _ _ _
-  else { // else if(assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
+  else{ //else if(assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
     // Es una curva solo a la derecha
     turnRight();
     // No es un cruce con varias opciones: está obligado a ir a la derecha.
@@ -175,12 +190,12 @@ void checkTypeOfCrossingRight() {
 
 /* Comprueba si es un cruce a la izquierda o a la izquierda y de frente. */
 void checkTypeOfCrossingLeft() {
-  goForwardAndUpdateAllIRSensors();
+  goForwardAndUpdateAllIRSensors(0);
 
   // _ X X _
-  if(assertIRSensorsValues(NO_LINE, LINE, LINE, NO_LINE)) {
-    // Algo de línea delante, es una curva a la izquierda y de frente
-    if(isFirstRound) {
+  if (assertIRSensorsValues(NO_LINE, LINE, LINE, NO_LINE)) {
+    // Algo de línea delante, es una curva a la izquierda y de frente
+    if (isFirstRound) {
       turnLeft();
       robotDecisions += "I"; // almacenamos que el robot va hacia la izquierda (left)
     }
@@ -188,7 +203,7 @@ void checkTypeOfCrossingLeft() {
       followStoredDecision();
   }
   // _ _ _ _
-  else { // else if(assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
+  else {// else if(assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
     // Es una curva solo a la izquierda
     turnLeft();
     // No es un cruce con varias opciones: está obligado a ir a la izquierda.
@@ -202,62 +217,83 @@ void checkTypeOfCrossingLeft() {
   - Meta.
 */
 void checkTypeOfCrossingAllLine() {
-  goForwardAndUpdateAllIRSensors();
+  goForwardAndUpdateAllIRSensors(400);
 
-  // _ _ _ _
-  if(assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
-    // Es un cruce a la izquierda y a la derecha
-    if(isFirstRound) {
-      turnLeft();
-      robotDecisions += "I"; // almacenamos que el robot va hacia la izquierda (left)
-    }
-    else
-      followStoredDecision();
-  }
-  // _ X X _
-  else if(assertIRSensorsValues(NO_LINE, LINE, LINE, NO_LINE)) {
-    // Es un cruce a la izquierda, a la derecha y de frente
-    if(isFirstRound) {
-      turnLeft();
-      robotDecisions += "I"; // almacenamos que el robot va hacia la izquierda (left)
-    }
-    else
-      followStoredDecision();
-  }
   // X X X X
-  else if(assertIRSensorsValues(LINE, LINE, LINE, LINE)) {
+  if (assertIRSensorsValues(LINE, LINE, LINE, LINE)) {
     // Es la meta
     robotReachesTheGoal();
     // No es un cruce con varias opciones: está obligado a ir de frente.
     // No se almacena la decisión en la 1º pasada ni se toma una decisión almacenada en las siguientes.
   }
+  // No es la meta
+  else {
+    // Es un cruce a la izquierda, a la derecha y de frente, o un cruce a la izquierda y a la derecha
+    // Independientemente de cual sea, tiene que girar a la izquierda.
+    if (isFirstRound) {
+      turnLeft();
+      robotDecisions += "I"; // almacenamos que el robot va hacia la izquierda (left)
+    }
+    else
+      followStoredDecision();
+  }
 }
 
-/* Avanza ligeramente y actualiza las mediciones de los sensores IR. */
-void goForwardAndUpdateAllIRSensors() {
-  // Avanzamos un poco para comprobar qué tipo de cruce es
-  goForward();
-  delay(GO_FORWARD_CHECK_CROSSING_TIME);
+/* 
+  Avanza ligeramente y actualiza las mediciones de los sensores IR. 
+  Se le puede indicar el tiempo que debe avanzar y quedarse quieto después de avanzar,
+  pasándole dicho valor como parámetro. Si se le pasa 0, utiliza el tiempo especificado en
+  GO_FORWARD_CHECK_CROSSING_TIME. Esto es porque para algunos tipos de cruce puede ser
+  necesario avanzar más que GO_FORWARD_CHECK_CROSSING_TIME para detectar que tipo de cruce es.
+*/
+void goForwardAndUpdateAllIRSensors(int delayValue) {
+    // Obtenemos el tiempo que va a hacer delay
+    int delayToWait;
+    if(delayValue == 0)
+      delayToWait = GO_FORWARD_CHECK_CROSSING_TIME;
+    else
+      delayToWait = delayValue;
+  
+    // Avanzamos un poco para comprobar qué tipo de cruce es
+    goForward();
+    delay(delayToWait);
+  
+    // Paramos un corto periodo de tiempo
+    stopRobot();
+    delay(delayToWait);
 
-  // Paramos un corto periodo de tiempo
+    // Actualizamos los valores de los sensores
+    updateAllIRSensors();
+
+    // Retrocedemos un poco para que el avanze previo no afecte al robot 
+    // a la hora de girar o lo que tenga que hacer.
+    goBackwardALittle();
+}
+
+/* Avanza ligeramente hacia atrás. */
+void goBackwardALittle() {
+  // Avanzamos hacia atrás cierto tiempo
+  leftServo.write(leftServoBackward);
+  rightServo.write(rightServoBackward);
+  delay(GO_BACKWARD_A_LITTLE_TIME);
+
+  // Paramos al robot cierto tiempo
   stopRobot();
-  delay(GO_FORWARD_CHECK_CROSSING_TIME);
-
-  updateAllIRSensors();
+  delay(GO_BACKWARD_A_LITTLE_TIME);
 }
 
 /* Actualiza las mediciones de los sensores de infrarrojos. */
 void updateAllIRSensors() {
   // Para cada uno de los 4 sensores IR, actualiza su valor
-  for(int i=0; i < 4; i++) {
+  for (int i = 0; i < 4; i++) {
     IRSensorsValues[i] = digitalRead(IRSensorsPins[i]);
   }
   // Se realizan 4 lecturas adicionales, para estar seguros del valor de cada sensor
-  // Se guardan las que detectan línea en cualquiera de los 4 barridos
-  for(int i=0; i < 4; i++) { // 4 barridos
-    delay(20); // Delay con el movimiento actual
+  // Se guardan las que detectan línea en cualquiera de los 4 barridos
+  for (int i = 0; i < 4 ; i++) {
+    delay(10); // Delay con el movimiento actual
 
-    for(int i=0; i < 4; i++) { // para cada 1 de los 4 sensores IR
+    for (int i = 0; i < 4; i++) { // para cada 1 de los 4 sensores IR
       if (digitalRead(IRSensorsPins[i]) == LINE )
         IRSensorsValues[i] = LINE;
     }
@@ -268,7 +304,7 @@ void updateAllIRSensors() {
 void robotReachesTheGoal() {
   // TODO - quizas se deba dejar avanzar al robot x ms hacia delante para entrar del todo en la meta
   stopRobot();
-  if(isFirstRound) {
+  if (isFirstRound) {
     reduceDecisions();
     isFirstRound = false;
   }
@@ -283,20 +319,20 @@ void reduceDecisions() {
   int i = 0;
   Serial.println(robotDecisions);
 
-  while(i <= robotDecisions.length() - 3) {
-    if(robotDecisions.substring(i, i + 3) == "ARI") { // coge [i, i+2] caracteres
+  while (i <= robotDecisions.length() - 3) {
+    if (robotDecisions.substring(i, i + 3) == "ARI") { // coge [i, i+2] caracteres
       applyReduction(i, "D");
       return reduceDecisions();
     }
-    else if(robotDecisions.substring(i, i + 3) == "IRI") { // coge [i, i+2] caracteres
+    else if (robotDecisions.substring(i, i + 3) == "IRI") { // coge [i, i+2] caracteres
       applyReduction(i, "A");
       return reduceDecisions();
     }
-    else if(robotDecisions.substring(i, i + 3) == "IRA") { // coge [i, i+2] caracteres
+    else if (robotDecisions.substring(i, i + 3) == "IRA") { // coge [i, i+2] caracteres
       applyReduction(i, "D");
       return reduceDecisions();
     }
-    else if(robotDecisions.substring(i, i + 3) == "DRI") { // coge [i, i+2] caracteres
+    else if (robotDecisions.substring(i, i + 3) == "DRI") { // coge [i, i+2] caracteres
       applyReduction(i, "R");
       return reduceDecisions();
     }
@@ -308,18 +344,18 @@ void reduceDecisions() {
 
 /* Actualiza el valor de robotDecisions, aplicando la reducción indicada a la parte indicada. */
 void applyReduction(int i, String reduction) {
-  robotDecisions = robotDecisions.substring(0, i) + reduction + robotDecisions.substring(i+3);
+  robotDecisions = robotDecisions.substring(0, i) + reduction + robotDecisions.substring(i + 3);
 }
 
 /* En el cruce actual, toma la decisión almacenada para dicho cruce, al estar en la segunda pasada y siguientes. */
 void followStoredDecision() {
   String decision = robotDecisions.substring(currentDecision, currentDecision + 1);
 
-  if(decision == "I")
+  if (decision == "I")
     turnLeft();
-  else if(decision == "A")
+  else if (decision == "A")
     goForward();
-  else if(decision == "D")
+  else if (decision == "D")
     turnRight();
   // TODO - Puede una decisión final indicar que retrocedas? No debería, porque si no no sería camino óptimo.
   currentDecision++;

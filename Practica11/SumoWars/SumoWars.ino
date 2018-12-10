@@ -3,8 +3,11 @@
 Servo leftServo;
 Servo rightServo;
 
-const int rightIRSensorPin = 3;
-const int leftIRSensorPin = 2;
+// Pines de los sensores de luz infrarroja
+const int IRSensorsPins[4] = {10, 2, 3, 11}; // izquierdo, central-izquierdo, central-derecho, derecho
+// Ultimos valores leidos para los sensores de luz infrarroja
+int IRSensorsValues[4];
+// Pines de los servomotores de las ruedas
 const int rightServoPin = 9;
 const int leftServoPin = 8;
 
@@ -18,37 +21,28 @@ const int rightServoBackward = 0;
 const int stopServo = 90;
 const int leftServoForwardSlow = 20; // La rueda izquierda avanza hacia delante, pero más despacio que a la velocidad máxima.
 
-boolean haveToResetTurnVariables = true; // Indica que cuando pierda la línea, debe resetear las variables de giro.
-
-int timeIncreaseTurn; // Tiempo entre incrementos del giro cuando está buscando línea.
-const int INITIAL_TIME_INCREASE_TURN = 5000; // Tiempo entre incrementos del giro cuando está buscando línea.
-const int TIME_INCREASE_TURN_INCREASE = 2000; // Incremento que se aplica al tiempo entre incrementos del giro.
-
-int turn; // Indica como se incrementa el giro cuando está buscando línea.
-unsigned long timeLastTurnIncrease; // Almacena el instante en el que incrementó el giro por primera vez.
-const int INITIAL_TURN = 10; // Almacena el giro inicial al que se somete el robot cuando empieza a buscar línea.
-const int TURN_INCREASE = 5; // Incrementos en el giro del robot cuando está buscando línea.
-const int TURN_LIMIT = 40; // Incrementos en el giro del robot cuando está buscando línea.
-
 // Variables para el sensor de ultrasonidos (sensor exterior)
 const int pinTrig = 4;
 const int pinEcho = 5;
-const long DISTANCE_SOMETHING_IN_FRONT = 15; // distancia en cm a partir de la cual se considera que hay algo delante del robot
+const long DISTANCE_SOMETHING_IN_FRONT = 20; // distancia en cm a partir de la cual se considera que hay algo delante del robot
 const int DELAY_BETWEEN_ULTRASONIC_SENSOR_MEASUREMENTS = 300; // tiempo mínimo (en milisegundos) que se ha de esperar entre cada medición del sensor de ultrasonidos (recomendable más de 20 microsegundos)
 unsigned long timeLastCheckIfThereIsSomethingInFront; // Almacena el instante el que se comprobó por última vez si algo se movía (en milisegundos)
 
-// Variables para el tiempo al esquivar un objeto
-const int TIME_STOP_AVOIDING_OBJECT = 1500; // Tiempo durante el cual se detiene cuando encuentra un objeto delante
-const int TIME_TURN_LEFT_AVOIDING_OBJECT = 1000; // Tiempo durante el cual se mueve hacia la izquierda cuando encuentra un objeto delante
-const int TIME_TURN_RIGHT_AVOIDING_OBJECT = 1000; // Tiempo durante el cual se mueve hacia la derecha cuando encuentra un objeto delante
-const int TIME_GO_FORWARD_AVOIDING_OBJECT = 500; // Tiempo durante el cual se mueve hacia delante cuando encuentra un objeto delante
+const int INITIAL_STOP_ROBOT_TIME = 5000;
+const int GO_BACKWARD_TIME = 700; // Tiempo durante el cual el robot avanza hacia atrás al estar a punto de caerse del tatami.
+const int TURN_AROUND_TIME = 1400; // Tiempo durante el cual el robot gira sobre sí mismo para dar la vuelta
+
+boolean somethingInFrontOfTheRobot = false;
 
 
 
 void setup() {
   Serial.begin(9600);
-  pinMode(rightIRSensorPin, INPUT);
-  pinMode(leftIRSensorPin, INPUT);
+  
+  // Para cada uno de los 4 pines de los sensores IR, los inicializamos como pines de entrada
+  for(int i=0; i < 4; i++) {
+    pinMode(IRSensorsPins[i], INPUT);
+  }
 
   pinMode(pinTrig, OUTPUT);
   pinMode(pinEcho, INPUT);
@@ -58,25 +52,25 @@ void setup() {
 
   // Lanzamos una primera medición para ignorar la primera medición del sensor de ultrasonidos, que suele dar 0cm
   getDistanceFromUltrasonicDistanceSensor();
+
+  delay(INITIAL_STOP_ROBOT_TIME);
 }
 
 void loop() {
-  tryToCheckIfThereIsSomethingInFront();
+  updateAllIRSensors();
 
-  if (leftIRSensor() == LINE && rightIRSensor() == LINE) {
-    hasFoundLine();
-    goForward();
+   //_ _ _ _
+  if (assertIRSensorsValues(NO_LINE, NO_LINE, NO_LINE, NO_LINE)) {
+    tryToCheckIfThereIsSomethingInFront();
+    // Si el contricante está delante, lo empuja hasta que ya no esté, salvo si se va a caer del tatami
+    if(somethingInFrontOfTheRobot)
+      pushOpponent();
+    else 
   }
-  else if (leftIRSensor() == LINE && rightIRSensor() == NO_LINE) {
-    hasFoundLine();
-    turnLeft();
-  }
-  else if (leftIRSensor() == NO_LINE && rightIRSensor() == LINE) {
-    hasFoundLine();
-    turnRight();
-  }
-  else { // Si no detecta linea por ninguno de los dos sensores, empieza a buscar la linea.
-    lookForLine();
+  // Hay algun sensor que detecta línea
+  else {
+    goBackward();
+    turnAround();
   }
 }
 
@@ -103,6 +97,17 @@ void turnRight() {
 void goBackward() {
   leftServo.write(leftServoBackward);
   rightServo.write(rightServoBackward);
+  delay(GO_BACKWARD_TIME);
+  stopRobotAndDelayALittle();
+}
+
+/* Le indica al robot que se de la vuelta. */
+void turnAround() {
+  // Gira sobre sí mismo en sentido anti-horario, 180º
+  leftServo.write(leftServoBackward);
+  rightServo.write(rightServoForward);
+  delay(TURN_AROUND_TIME);
+  stopRobotAndDelayALittle();
 }
 
 /* Le indica al robot que se detenga. */
@@ -121,39 +126,6 @@ int rightIRSensor() {
   return digitalRead(rightIRSensorPin);
 }
 
-/* Se mueve en una espiral intentando encontrar la línea. */
-void lookForLine() {
-  // El primer instante que comienza a buscar la línea establece el instante en el que comenzó a buscarla como el actual
-  if (haveToResetTurnVariables) {
-    timeLastTurnIncrease = millis();
-    turn = INITIAL_TURN; // El giro empieza en el valor inicial
-    timeIncreaseTurn = INITIAL_TIME_INCREASE_TURN; // El tiempo entre incrementos empieza en el valor inicial
-    haveToResetTurnVariables = false;
-  }
-
-  // Si han pasado más de timeIncreaseTurn segundos desde el ultimo incremento de giro y no se supera el giro límite (sumando el incremento)
-  if (millis() - timeLastTurnIncrease > timeIncreaseTurn && turn + TURN_INCREASE <= TURN_LIMIT ) {
-    timeLastTurnIncrease = millis();
-    turn += TURN_INCREASE; // se incrementa el giro.
-    timeIncreaseTurn += TIME_INCREASE_TURN_INCREASE; // se incrementa el tiempo entre incrementos.
-  }
-
-  spiralPath();
-}
-
-/* Le indica al robot que avanze en espiral, en sentido horario. */
-void spiralPath() {
-  leftServo.write(leftServoForwardSlow);
-  rightServo.write(stopServo + turn);
-}
-
-/* Ha encontrado la línea, por lo que no es la primera vez que la busca. */
-void hasFoundLine() {
-  // Aquí ya encontró la línea, así que ya no es el primer momento en el que busca la línea
-  // (esa variable se pondrá a cierto la prox vez que pierda la línea)
-  haveToResetTurnVariables = true;
-}
-
 /* Si ha pasado el tiempo minimo entre mediciones del sensor de ultrasonidos, comprueba si hay algo delante del robot. */
 void tryToCheckIfThereIsSomethingInFront() {
   // Si ha pasado el tiempo mínimo entre mediciones con el sensor de ultrasonidos desde la última vez que se comprobó si había algo delante
@@ -162,41 +134,27 @@ void tryToCheckIfThereIsSomethingInFront() {
   }
 }
 
-/* Comprueba si hay algo delante del robot. */
+/* Comprueba si hay algo delante del robot, para en ese caso empujarlo. */
 void checkIfThereIsSomethingInFront() {
   timeLastCheckIfThereIsSomethingInFront = millis(); // se establece el tiempo actual como el de la última comprobación
 
   // Si detecta algo a una distancia menor o igual que la indicada
-  if (getDistanceFromUltrasonicDistanceSensor() <= DISTANCE_SOMETHING_IN_FRONT) {
-    avoidObject();
-  }
+  if (getDistanceFromUltrasonicDistanceSensor() <= DISTANCE_SOMETHING_IN_FRONT)
+    somethingInFrontOfTheRobot = true;
+  else 
+    somethingInFrontOfTheRobot = false;
 }
 
-/* Esquiva el obstáculo que tiene delante. */
-void avoidObject() {
-  Serial.println("Esquivar objeto.");
+/* Empujar al robot que tiene delante. */
+void pushOpponent() {
+  Serial.println("Empujar contrincante.");
 
-  // Se para el robot durante cierto tiempo
-  stopRobot();
-  delay(TIME_STOP_AVOIDING_OBJECT);
-
-  // Se mueve el robot hacia la izquierda durante cierto tiempo
-  turnLeft();
-  delay(TIME_TURN_LEFT_AVOIDING_OBJECT);
-
-  // Avanza durante cierto tiempo
+  // Avanza hasta que no tenga nada delante (siempre que no esté a punto de salirse del tatami).
   goForward();
-  delay(TIME_GO_FORWARD_AVOIDING_OBJECT);
-
-
-  // Se mueve el robot hacia la derecha durante cierto tiempo
-  turnRight();
-  delay(TIME_TURN_RIGHT_AVOIDING_OBJECT);
-
-  // Mientras no encuentre línea, se mueve hacia la derecha ligeramente
-  leftServo.write(10);
-  rightServo.write(110);
-  while (leftIRSensor() == NO_LINE && rightIRSensor() == NO_LINE);
+  while (somethingInFrontOfTheRobot && assertIRSensorsValues(LINE, LINE, LINE, LINE)){
+    tryToCheckIfThereIsSomethingInFront();
+    updateAllIRSensors();
+  }
 }
 
 /* Devuelve la distancia en cm al sensor de ultrasonidos */
@@ -217,4 +175,27 @@ long getDistanceFromUltrasonicDistanceSensor() {
   Serial.println("Distancia sensor ultrasonidos: " + String(distance) + "cm");
 
   return distance;
+}
+
+/* Actualiza las mediciones de los sensores de infrarrojos. */
+void updateAllIRSensors() {
+  // Para cada uno de los 4 sensores IR, actualiza su valor
+  for(int i=0; i < 4; i++) {
+    IRSensorsValues[i] = digitalRead(IRSensorsPins[i]);
+  }
+  // Se realizan 4 lecturas adicionales, para estar seguros del valor de cada sensor
+  // Se guardan las que detectan línea en cualquiera de los 4 barridos
+  for(int i=0; i < 1; i++) { // 4 barridos
+    delay(20); // Delay con el movimiento actual
+
+    for(int i=0; i < 4; i++) { // para cada 1 de los 4 sensores IR
+      if (digitalRead(IRSensorsPins[i]) == LINE )
+        IRSensorsValues[i] = LINE;
+    }
+  }
+}
+
+void stopRobotAndDelayALittle(){
+  stopRobot();
+  delay(300);
 }
