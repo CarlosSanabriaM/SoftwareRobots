@@ -1,4 +1,3 @@
- 
 RotX_pared_interna = 90;
 RotY_pared_interna = 0;
 RotZ_pared_interna = 0;
@@ -15,43 +14,46 @@ module servoBrace(){
   union(){
 
     difference(){
-      //Central
+      // Pilar central frontal
       translate([0,0,12])
         cube ([30,2,23], center = true);
-
+        
+      // Agujero central
       translate([0,0,12])
         rotate([90,0,0])
           cylinder (h = 55, d = 3, center = true, $fn = 30);
     }
- 
-    //Izquierda G
-    translate([21,19,12])
-      cube ([16,2,23], center = true);
-
-    //Derecha G
-    translate([-21,19,12])
-      cube ([16,2,23], center = true);
-
+    
     difference(){
-      //Izquierda P
-      translate([32,0,12])
-        cube ([10,2,23], center = true);
-
-      translate([33.4,0,12])
-        rotate([90,0,0])
-          cylinder (h = 55, d = 3, center = true, $fn = 30);
-    }
-
-    difference(){
-      //Derecha P
+      // Pilar izquierdo frontal
       translate([-32,0,12])
         cube ([10,2,23], center = true);
 
+      // Agujero izquierdo
       translate([-33.6,0,12])
         rotate([90,0,0])
           cylinder (h = 55, d = 3, center = true, $fn = 30);
     }
+    
+    difference(){
+      // Pilar derecho frontal
+      translate([32,0,12])
+        cube ([10,2,23], center = true);
+
+      // Agujero derecho
+      translate([33.4,0,12])
+        rotate([90,0,0])
+          cylinder (h = 55, d = 3, center = true, $fn = 30);
+    }
  
+    // Pilar izquierdo trasero
+    translate([-21,19,12])
+      cube ([16,2,23], center = true);
+    
+    // Pilar derecho trasero
+    translate([21,19,12])
+      cube ([16,2,23], center = true);
+
     // Paredes Internas
     
     rotate(RotX_pared_interna,RotY_pared_interna,RotZ_pared_interna)

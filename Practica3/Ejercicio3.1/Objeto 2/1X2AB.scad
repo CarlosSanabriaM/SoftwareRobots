@@ -14,24 +14,25 @@ module sujecion_rueda(){
     difference(){
       // Soporte Central
       rotate([0,0,90])
-        translate([20,-2,10])
-          cube ([40,3,20], center = true);
+        translate([20,-1,10])
+          cube ([39,3,20], center = true);
 
       // Agujero central
       translate([0,20,10])
         rotate([0,90,0])
           cylinder (h = H_Cilindro, d = D_Cilindro, center = true, $fn = Num_Caras_Cilindro);
    
-      // Corte diagonal derecha
-      translate([0,42,10])
-        rotate([30,0,0])
-          cube([SizeX_Corte_Diagonal,SizeY_Corte_Diagonal,SizeZ_Corte_Diagonal], center = true);
-
       //Cortar diagonal izquierda   
       translate([0,-2,10])
         rotate([60,0,0])
           rotate([90,0,0])
             cube([SizeX_Corte_Diagonal,SizeY_Corte_Diagonal,SizeZ_Corte_Diagonal], center = true);
+        
+      // Corte diagonal derecha
+      translate([0,42,10])
+        rotate([30,0,0])
+          cube([SizeX_Corte_Diagonal,SizeY_Corte_Diagonal,SizeZ_Corte_Diagonal], center = true);
+
     }
 
     difference(){

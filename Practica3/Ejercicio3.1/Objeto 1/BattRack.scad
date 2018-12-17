@@ -6,15 +6,15 @@ module battrack(){
     difference() {
       translate([0,21,20])
         cube(size = [30, 41, 36], center = true);
+        
+      translate([0,0,0])
+        cube(size = [20, 42, 17], center = false);
 
       translate([0,0,0])
         cube(size = [12, 39, 40], center = false);
     
       translate([-12,0,0])
         cube(size = [12, 39, 40], center = false);
-     
-      translate([0,0,0])
-        cube(size = [20, 42, 17], center = false);
      
       translate([-15,0,0])
         cube(size = [20, 42, 17], center = false);
