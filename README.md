@@ -41,10 +41,23 @@ Programas y documentación para la asignatura de Software para Robots del grado 
 
     - Red de sensores de temperatura y humedad 7.1 (1 punto)
     
+- **Practica 8:**
+
+    - Montar Servidor IoT (2 puntos)
+    
 - **Practica 9:**
 
     - Sigue líneas 9.1 (0,5 puntos)
     - Encontrar el circuito 9.2 (0,75 puntos)
-    - Esquivar obstáculos 9.3 (0,75 puntos)
+    - Esquivar obstáculos 9.3 (0,75 puntos) 
     
-***Puntuación Actual=*** *8.05 puntos*
+- **Practica 10:**
+
+    - Escapada de laberintos 10.1 (1,5 puntos)
+    - Resolución de laberintos 10.2 (0,5 puntos)
+    
+- **Practica 11:**
+
+    - Sumo Wars (0.25 puntos)
+    
+***Puntuación Actual=*** *12.30 puntos*
