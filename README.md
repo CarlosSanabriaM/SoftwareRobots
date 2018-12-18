@@ -23,6 +23,8 @@ Programas y documentación para la asignatura de Software para Robots del grado 
     - Diseño de piezas con OpenScad 3.1:
         - Objeto 1: MobBob (0,4 puntos)
         - Objeto 3: Robot Móvil (0,4 puntos)
+        - Objeto 4: Bob the Robot (0,4 puntos)
+        - Objeto 5: Quadcopter full frame (0,4 puntos)
 
 - **Practica 4:**
 
@@ -60,4 +62,4 @@ Programas y documentación para la asignatura de Software para Robots del grado 
 
     - Sumo Wars (0.25 puntos)
     
-***Puntuación Actual=*** *12.30 puntos*
+***Puntuación Actual=*** *13.10 puntos*
